@@ -91,10 +91,13 @@ public class MovementController : MonoBehaviour
 
     private void MoveCharacter() {
         if (movement.x != 0) {
-            facingRight = movement.x > 0;
-            // Vector3 ls = transform.localScale;
-            // ls.x *= facingRight ? 1f : -1f;
-            // transform.localScale = ls;
+            if (facingRight != movement.x > 0) {
+                facingRight = !facingRight;
+
+                Vector3 ls = transform.localScale;
+                ls.x *= -1f;
+                transform.localScale = ls;
+            }
         }
 
         rb2D.velocity = new Vector2(movement.x * speed, rb2D.velocity.y);
