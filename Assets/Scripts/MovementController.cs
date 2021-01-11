@@ -20,6 +20,8 @@ public class MovementController : MonoBehaviour
     public int maxJumps = 2; 
     public bool dashAvailable = false;
     IEnumerator dashCoroutine;
+
+    float jumpDelay = 0f;
     int jumpsAvailable = 0;
 
     enum CharStates {
@@ -41,12 +43,13 @@ public class MovementController : MonoBehaviour
         movement.Normalize();
 
         isGrounded = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, solidSurface);
-        if (isGrounded) {
+        if (Time.time > jumpDelay && isGrounded) {
             Ground();
         }
 
         if (Input.GetButtonDown("Jump")) {
             if (jumpsAvailable > 0) {
+                jumpDelay = Time.time + 0.2f;
                 jumpsAvailable--;
                 Jump();
             }
@@ -67,7 +70,7 @@ public class MovementController : MonoBehaviour
 
     private void Jump() {
         rb2D.velocity = new Vector2(rb2D.velocity.x, 0);
-        rb2D.AddForce(Vector2.up * 30f, ForceMode2D.Impulse); 
+        rb2D.AddForce(Vector2.up * 30f, ForceMode2D.Impulse);
     }
 
     private IEnumerator Dash() {
@@ -108,6 +111,14 @@ public class MovementController : MonoBehaviour
         jumpsAvailable = maxJumps;
         dashAvailable = true;
     }
+
+    // private bool CheckJumpDelay() {
+    //     if (Time.time > jumpDelay) {
+    //         return Time.time > jumpDelay;
+    //     }
+
+    //     return true;
+    // }
 
     private void UpdateState() {
         if (movement.x != 0) {
