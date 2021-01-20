@@ -16,13 +16,21 @@ public class MovementController : MonoBehaviour
     public Transform crosshair;
 
     public bool facingRight = true;
+    bool isControllable = true;
+    
+    [Header("Jumping")]
     public bool isGrounded = false;
     public int maxJumps = 2; 
-    public bool dashAvailable = false;
-    IEnumerator dashCoroutine;
-
     float jumpDelay = 0f;
     int jumpsAvailable = 0;
+
+    [Header("Dashing")]
+    public bool isDashing = false;
+    public float dashForce = 10f;
+    public float dashDuration = 0.1f;
+    Vector2 dashingDirection;
+    bool dashAvailable = false;
+    IEnumerator dashCoroutine;
 
     enum CharStates {
         walk = 1,
@@ -47,25 +55,31 @@ public class MovementController : MonoBehaviour
             Ground();
         }
 
-        if (Input.GetButtonDown("Jump")) {
-            if (jumpsAvailable > 0) {
-                jumpDelay = Time.time + 0.2f;
-                jumpsAvailable--;
-                Jump();
+        if (isControllable) {
+            if (Input.GetButtonDown("Jump")) {
+                if (jumpsAvailable > 0) {
+                    jumpDelay = Time.time + 0.2f;
+                    jumpsAvailable--;
+                    Jump();
+                }
+            } else if (Input.GetKeyDown("left shift") && dashAvailable) {
+                if (dashCoroutine != null) {
+                    StopCoroutine(dashCoroutine);
+                }
+                dashCoroutine = Dash();
+                StartCoroutine(dashCoroutine);
             }
-        } else if (Input.GetKeyDown("left shift") && dashAvailable) {
-            if (dashCoroutine != null) {
-                StopCoroutine(dashCoroutine);
-            }
-            dashCoroutine = Dash();
-            StartCoroutine(dashCoroutine);
         }
 
         UpdateState();
     }
 
     void FixedUpdate() {
-        MoveCharacter();
+        if (isDashing) {
+            rb2D.AddForce(dashingDirection * dashForce, ForceMode2D.Impulse);
+        } else {
+            MoveCharacter();
+        }
     }
 
     private void Jump() {
@@ -74,22 +88,27 @@ public class MovementController : MonoBehaviour
     }
 
     private IEnumerator Dash() {
+        isDashing = true;
         dashAvailable = false;
+        isControllable = false;
         rb2D.gravityScale = 0f;
         rb2D.velocity = Vector2.zero;
         
-        // Vector2 direction;
-        // if (isGrounded) {
-        //     direction = facingRight ? Vector2.right : Vector2.left;
-        // } else {
-        //     direction = crosshair.position - transform.position;
-        // }
+        if (isGrounded) {
+            dashingDirection = crosshair.position.x > 0 ? Vector2.right : Vector2.left;
+        } else {
+            dashingDirection = crosshair.position - transform.position;
+        }
 
-        // direction.Normalize();
-        // Debug.Log($"{direction.x}, {direction.y}");
+        dashingDirection.Normalize();
 
-        // rb2D.AddForce(direction * 30f, ForceMode2D.Impulse); 
-        yield return new WaitForSeconds(0f);
+        yield return new WaitForSeconds(dashDuration);
+
+        isDashing = false;
+        isControllable = true;
+        rb2D.gravityScale = 17.5f;
+        Debug.Log("Setting v to 0");
+        rb2D.velocity = Vector2.zero;
     }
 
     private void MoveCharacter() {
@@ -111,14 +130,6 @@ public class MovementController : MonoBehaviour
         jumpsAvailable = maxJumps;
         dashAvailable = true;
     }
-
-    // private bool CheckJumpDelay() {
-    //     if (Time.time > jumpDelay) {
-    //         return Time.time > jumpDelay;
-    //     }
-
-    //     return true;
-    // }
 
     private void UpdateState() {
         if (movement.x != 0) {

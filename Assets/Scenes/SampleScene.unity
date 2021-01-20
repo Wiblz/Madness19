@@ -310,7 +310,9 @@ MonoBehaviour:
   facingRight: 1
   isGrounded: 0
   maxJumps: 2
-  dashAvailable: 0
+  isDashing: 0
+  dashForce: 10
+  dashDuration: 0.1
 --- !u!50 &554719460
 Rigidbody2D:
   serializedVersion: 4
