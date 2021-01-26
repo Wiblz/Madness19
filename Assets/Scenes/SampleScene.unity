@@ -303,6 +303,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 6
   jumpForce: 15
+  weapons:
+  - {fileID: 11400000, guid: 5637e207db12864f2a63d848d5b7a35a, type: 2}
+  - {fileID: 11400000, guid: 933500f4e43fa64939f6ee51b07ac4b2, type: 2}
   solidSurface:
     serializedVersion: 2
     m_Bits: 256
@@ -334,19 +337,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
---- !u!114 &554719461
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 554719458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f32640c8235ab273a18fec9986a8e1a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  firePoint: {fileID: 1071959928}
 --- !u!1 &852765786
 GameObject:
   m_ObjectHideFlags: 3
@@ -1213,8 +1203,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d655fead4b3adafb5675988d80139b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bullet: {fileID: 8246582194286339815, guid: ed2df26e4435d2a1ba67c878c45b704d, type: 3}
+  player: {fileID: 0}
+  weapon: {fileID: 11400000, guid: 5637e207db12864f2a63d848d5b7a35a, type: 2}
   firePoint: {fileID: 1071959928}
-  maxDistance: 3.5
 --- !u!212 &1850607883
 SpriteRenderer:
   m_ObjectHideFlags: 0

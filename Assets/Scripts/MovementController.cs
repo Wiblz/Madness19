@@ -1,11 +1,20 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MovementController : MonoBehaviour
-{
+public class MovementController : MonoBehaviour {    
     public float speed = 3.0f;
     public float jumpForce = 5.0f;
+
+    [SerializeField]
+    public Weapon[] weapons;
+    public Weapon currentWeapon;
+    public event EventHandler<OnWeaponChangedArgs> OnWeaponChanged;
+
+    public class OnWeaponChangedArgs : EventArgs {
+        public Weapon newWeapon;
+    }
 
     Vector2 movement = new Vector2();
     Rigidbody2D rb2D;
@@ -38,15 +47,15 @@ public class MovementController : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         rb2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+
+        currentWeapon = weapons[0];
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.Normalize();
 
@@ -71,6 +80,12 @@ public class MovementController : MonoBehaviour
             }
         }
 
+        if (Input.GetKeyDown("1")) {
+            ChangeWeapon(0);
+        } else if (Input.GetKeyDown("2")) {
+            ChangeWeapon(1);
+        }
+
         UpdateState();
     }
 
@@ -79,6 +94,13 @@ public class MovementController : MonoBehaviour
             rb2D.AddForce(dashingDirection * dashForce, ForceMode2D.Impulse);
         } else {
             MoveCharacter();
+        }
+    }
+
+    private void ChangeWeapon(int slot) {
+        if (currentWeapon != weapons[slot]) {
+            currentWeapon = weapons[slot];
+            OnWeaponChanged?.Invoke(this, new OnWeaponChangedArgs{ newWeapon = currentWeapon });   
         }
     }
 

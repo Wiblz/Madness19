@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Weapon : MonoBehaviour
+[CreateAssetMenu(fileName = "New Weapon", menuName = "Weapon")]
+public class Weapon : ScriptableObject
 {
-    public Transform firePoint;
-    
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public new string name;
+    public Sprite icon;    
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public float cooldown;
+    public float power;
+    public float aimingDistance;
 }
