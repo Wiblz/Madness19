@@ -117,7 +117,7 @@ public class MovementController : MonoBehaviour {
         rb2D.velocity = Vector2.zero;
         
         if (isGrounded) {
-            dashingDirection = crosshair.position.x > 0 ? Vector2.right : Vector2.left;
+            dashingDirection = crosshair.position.x - transform.position.x  > 0 ? Vector2.right : Vector2.left;
         } else {
             dashingDirection = crosshair.position - transform.position;
         }
