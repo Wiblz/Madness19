@@ -129,7 +129,7 @@ public class MovementController : MonoBehaviour {
         isDashing = false;
         isControllable = true;
         rb2D.gravityScale = 17.5f;
-        Debug.Log("Setting v to 0");
+        // Debug.Log("Setting v to 0");
         rb2D.velocity = Vector2.zero;
     }
 
