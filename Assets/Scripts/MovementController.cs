@@ -18,6 +18,7 @@ public class MovementController : MonoBehaviour {
 
     Vector2 movement = new Vector2();
     Rigidbody2D rb2D;
+    Collider2D boxCollider;
     Animator animator;
     string animationState = "AnimationState";
 
@@ -49,6 +50,7 @@ public class MovementController : MonoBehaviour {
     // Start is called before the first frame update
     void Start() {
         rb2D = GetComponent<Rigidbody2D>();
+        boxCollider = GetComponent<BoxCollider2D>();
         animator = GetComponent<Animator>();
 
         currentWeapon = weapons[0];
@@ -59,7 +61,7 @@ public class MovementController : MonoBehaviour {
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.Normalize();
 
-        isGrounded = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, solidSurface);
+        isGrounded = GroundCheck();
         if (Time.time > jumpDelay && isGrounded) {
             Ground();
         }
@@ -87,6 +89,12 @@ public class MovementController : MonoBehaviour {
         }
 
         UpdateState();
+    }
+
+    bool GroundCheck() {
+        return Physics2D.Raycast(transform.position, Vector2.down, 0.6f, solidSurface) ||
+               Physics2D.Raycast(transform.position - Vector3.right * boxCollider.bounds.size.x / 2f, Vector2.down, 0.6f, solidSurface) ||
+               Physics2D.Raycast(transform.position + Vector3.right * boxCollider.bounds.size.x / 2f, Vector2.down, 0.6f, solidSurface);
     }
 
     void FixedUpdate() {
@@ -164,5 +172,9 @@ public class MovementController : MonoBehaviour {
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawLine(transform.position, transform.position + Vector3.down * 0.6f);
+        if (boxCollider != null) {
+            Gizmos.DrawLine(transform.position - Vector3.right * boxCollider.bounds.size.x / 2f, (transform.position - Vector3.right * boxCollider.bounds.size.x / 2f) + Vector3.down * 0.6f);
+            Gizmos.DrawLine(transform.position + Vector3.right * boxCollider.bounds.size.x / 2f, (transform.position + Vector3.right * boxCollider.bounds.size.x / 2f) + Vector3.down * 0.6f);
+        }        
     }
 }

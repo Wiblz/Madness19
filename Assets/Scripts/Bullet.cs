@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
-{
+public class Bullet : MonoBehaviour {
+    bool ignore = true;
+
     // Start is called before the first frame update
     void Start() {
         Destroy(gameObject, 5f);
@@ -15,11 +16,12 @@ public class Bullet : MonoBehaviour
         
     }
 
-    void OnCollisionEnter(Collision c) {
-        Debug.Log("Name of the object: " + c.gameObject.name);
-    }
-
-    void OnTriggerEnter(Collider other) {
+    void OnTriggerEnter2D(Collider2D other) {
         Debug.Log("Name of the object: " + other.gameObject.name);
+        if (ignore) {
+            ignore = false;
+        } else {
+            Destroy(gameObject);
+        }
     }
 }

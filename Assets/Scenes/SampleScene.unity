@@ -178,7 +178,7 @@ GameObject:
   - component: {fileID: 472011041}
   - component: {fileID: 472011040}
   - component: {fileID: 472011039}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MapGenerator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -244,6 +244,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62667f39f29ec0bb6b993e31cc6fb94f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  walls: {fileID: 0}
+  cave: {fileID: 472011039}
 --- !u!114 &472011042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -411,11 +413,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 6
-  jumpForce: 15
+  jumpForce: 5
   weapons:
   - {fileID: 11400000, guid: 5637e207db12864f2a63d848d5b7a35a, type: 2}
   - {fileID: 11400000, guid: 933500f4e43fa64939f6ee51b07ac4b2, type: 2}
-  currentWeapon: {fileID: 0}
+  currentWeapon: {fileID: 11400000, guid: 5637e207db12864f2a63d848d5b7a35a, type: 2}
   solidSurface:
     serializedVersion: 2
     m_Bits: 256
@@ -447,6 +449,12 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
+--- !u!4 &642059453 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1331612228658631984, guid: 0c2c6feb933ad87bcbbc22400b8082be,
+    type: 3}
+  m_PrefabInstance: {fileID: 2063134294}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &852765786
 GameObject:
   m_ObjectHideFlags: 3
@@ -600,36 +608,6 @@ Transform:
   - {fileID: 852765787}
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1071959927
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1071959928}
-  m_Layer: 0
-  m_Name: FirePoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 5721338939258241955, guid: 0000000000000000d000000000000000, type: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1071959928
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1071959927}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 2063134295}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1576512908
 GameObject:
@@ -1314,8 +1292,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bullet: {fileID: 8246582194286339815, guid: ed2df26e4435d2a1ba67c878c45b704d, type: 3}
-  player: {fileID: 0}
-  firePoint: {fileID: 1071959928}
+  player: {fileID: 554719458}
+  firePoint: {fileID: 642059453}
 --- !u!212 &1850607883
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1387,6 +1365,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 440941369805701860, guid: 0c2c6feb933ad87bcbbc22400b8082be,
+        type: 3}
+      propertyPath: crosshair
+      value: 
+      objectReference: {fileID: 1850607884}
+    - target: {fileID: 5124353958941415339, guid: 0c2c6feb933ad87bcbbc22400b8082be,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8441973697605287125, guid: 0c2c6feb933ad87bcbbc22400b8082be,
         type: 3}
       propertyPath: m_Name
@@ -1474,6 +1462,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8441973697605287145, guid: 0c2c6feb933ad87bcbbc22400b8082be, type: 3}
+    - {fileID: 440941369805701860, guid: 0c2c6feb933ad87bcbbc22400b8082be, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 0c2c6feb933ad87bcbbc22400b8082be, type: 3}
 --- !u!4 &2063134295 stripped
 Transform:
