@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class CrosshairController : MonoBehaviour {
     // Start is called before the first frame update
-    public GameObject bullet;
     public GameObject player;
+    public BulletHandler bulletHandler;
     Weapon weapon;
 
     public Transform firePoint;
@@ -18,6 +18,8 @@ public class CrosshairController : MonoBehaviour {
         player = GameObject.Find("PlayerObject");
         weapon = player.GetComponent<MovementController>().currentWeapon;
         player.GetComponent<MovementController>().OnWeaponChanged += ChangeWeapon;
+        bulletHandler = GameObject.Find("BulletHandler").GetComponentInParent<BulletHandler>();
+
         Cursor.visible = false;
     }
 
@@ -41,8 +43,10 @@ public class CrosshairController : MonoBehaviour {
         }
 
         if (Input.GetButtonDown("Fire1")) {
-            Rigidbody2D rb = Instantiate(bullet, firePoint.position, Quaternion.identity).GetComponent<Rigidbody2D>();
-            rb.AddForce(aimingDirection * weapon.power, ForceMode2D.Impulse);
+            bulletHandler.Spawn(weapon, firePoint.position, aimingDirection);
+            // GameObject blt = Instantiate(bullet, firePoint.position, Quaternion.identity);
+            // Physics2D.IgnoreCollision(blt.GetComponent<CircleCollider2D>(), player.GetComponent<Collider2D>());
+            // blt.GetComponent<Rigidbody2D>().AddForce(aimingDirection * weapon.power, ForceMode2D.Impulse);
         }
     }
 }

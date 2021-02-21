@@ -1,8 +1,11 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class MeshGenerator : MonoBehaviour {
+    public BulletHandler bulletHandler;
 
     public SquareGrid squareGrid;
     public MeshFilter walls;
@@ -15,7 +18,107 @@ public class MeshGenerator : MonoBehaviour {
     List<List<int>> outlines = new List<List<int>> ();
     HashSet<int> checkedVertices = new HashSet<int>();
 
+    Vector2 impactPosition;
+    float impactRadius;
+
+    void OnDrawGizmosSelected() {
+        if (squareGrid != null) {
+            if (impactPosition != null) {
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireSphere(impactPosition, 0.05f);
+            }
+            if (impactRadius != 0f) {
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireSphere(impactPosition, impactRadius);
+            }
+
+            for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
+                for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
+
+                    // Gizmos.color = squareGrid[x,y].topLeft.GetColor();
+                    // Gizmos.DrawWireCube(squareGrid[x,y].topLeft.position, Vector3.one);
+
+                    // Gizmos.color = squareGrid[x,y].topRight.GetColor();
+                    // Gizmos.DrawWireCube(squareGrid[x,y].topRight.position, Vector3.one);
+
+                    // Gizmos.color = squareGrid[x,y].bottomRight.GetColor();
+                    // Gizmos.DrawWireCube(squareGrid[x,y].bottomRight.position, Vector3.one);
+
+                    // Gizmos.color = squareGrid[x,y].bottomLeft.GetColor();
+                    // Gizmos.DrawWireCube(squareGrid[x,y].bottomLeft.position, Vector3.one);
+
+                    // Gizmos.color = squareGrid[x,y].configuration == 0?ControlNode.white:ControlNode.gray;
+                    Gizmos.color = squareGrid[x,y].highlighted ? Color.white : Color.clear;
+
+                    Gizmos.DrawLine(squareGrid[x,y].topLeft.position, squareGrid[x,y].topRight.position);
+                    // Gizmos.DrawLine(squareGrid[x,y].topRight.position, squareGrid[x,y].bottomRight.position);
+                    // Gizmos.DrawLine(squareGrid[x,y].bottomRight.position, squareGrid[x,y].bottomLeft.position);
+                    Gizmos.DrawLine(squareGrid[x,y].bottomLeft.position, squareGrid[x,y].topLeft.position);
+
+                    // Gizmos.color = squareGrid[x,y].configuration == 0?ControlNode.white:ControlNode.red;
+                    // Gizmos.DrawWireCube(squareGrid[x,y].Center(), Vector3.one);
+
+                    // Gizmos.color = gray;
+                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreTop.position, Vector3.one * .15f);
+                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreRight.position, Vector3.one * .15f);
+                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreBottom.position, Vector3.one * .15f);
+                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreLeft.position, Vector3.one * .15f);
+
+                }
+            }
+        }
+    }
+
+    /* DEBUG purposes only */
+    void Update() {
+        if (Input.GetButtonDown("Fire2")) {
+            Vector2 position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Square s = squareGrid.LocateSquare(position);
+            Debug.Log($"{s.topLeft.active} {s.topRight.active}\n{s.bottomLeft.active} {s.bottomRight.active}\n {s.configuration}");
+            s.highlighted = true;
+        }
+    }
+
+    private void A(object sender, BulletHandler.OnBulletExplosionArgs args) {
+        impactPosition = args.position;
+        impactRadius = args.radius;
+
+        foreach (Square square in squareGrid.GetSquaresInRadius(args.position, args.radius)) {
+            bool wasChanged = square.ImpactSquare(args);
+            // if (wasChanged) {
+            //     square.CalculateConfiguration();
+            // }
+            square.highlighted = true;
+        }
+
+        squareGrid.ResetIndices();
+        triangleDictionary.Clear();
+        outlines.Clear();
+        checkedVertices.Clear();
+
+        vertices = new List<Vector3>();
+        triangles = new List<int>();
+
+        Debug.Log(squareGrid.ToString());
+        for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
+            for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
+                TriangulateSquare(squareGrid[x, y]);
+            }
+        }
+
+        Mesh mesh = cave.mesh;
+        mesh.Clear();
+        
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.RecalculateNormals();
+        
+        Generate2DColliders();
+    }
+
     public void GenerateMesh(int[,] map, float squareSize) {
+        bulletHandler = GameObject.Find("BulletHandler").GetComponentInParent<BulletHandler>();
+        bulletHandler.OnBulletExplosion += A;
 
         triangleDictionary.Clear();
         outlines.Clear();
@@ -26,9 +129,10 @@ public class MeshGenerator : MonoBehaviour {
         vertices = new List<Vector3>();
         triangles = new List<int>();
 
-        for (int x = 0; x < squareGrid.squares.GetLength(0); x ++) {
-            for (int y = 0; y < squareGrid.squares.GetLength(1); y ++) {
-                TriangulateSquare(squareGrid.squares[x,y]);
+        Debug.Log(squareGrid.ToString());
+        for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
+            for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
+                TriangulateSquare(squareGrid[x, y]);
             }
         }
 
@@ -39,33 +143,33 @@ public class MeshGenerator : MonoBehaviour {
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
 
-        int tileAmount = 10;
-        Vector2[] uvs = new Vector2[vertices.Count];
-        for (int i =0; i < vertices.Count; i ++) {
-            float percentX = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize,map.GetLength(0)/2*squareSize,vertices[i].x) * tileAmount;
-            float percentY = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize,map.GetLength(0)/2*squareSize,vertices[i].z) * tileAmount;
-            uvs[i] = new Vector2(percentX,percentY);
-        }
-        mesh.uv = uvs;
+        // int tileAmount = 10;
+        // Vector2[] uvs = new Vector2[vertices.Count];
+        // for (int i = 0; i < vertices.Count; i++) {
+        //     float percentX = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize,map.GetLength(0)/2*squareSize,vertices[i].x) * tileAmount;
+        //     float percentY = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize,map.GetLength(0)/2*squareSize,vertices[i].z) * tileAmount;
+        //     uvs[i] = new Vector2(percentX,percentY);
+        // }
+        // mesh.uv = uvs;
 
 
         Generate2DColliders();
     }
 
     void Generate2DColliders() {
-
         EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D> ();
-        for (int i = 0; i < currentColliders.Length; i++) {
-            Destroy(currentColliders[i]);
+        foreach (EdgeCollider2D collider in currentColliders) {
+            Destroy(collider);
         }
 
-        CalculateMeshOutlines ();
+        CalculateMeshOutlines();
 
+        Debug.Log(outlines.Count);
         foreach (List<int> outline in outlines) {
             EdgeCollider2D edgeCollider = gameObject.AddComponent<EdgeCollider2D>();
             Vector2[] edgePoints = new Vector2[outline.Count];
 
-            for (int i =0; i < outline.Count; i ++) {
+            for (int i = 0; i < outline.Count; i++) {
                 edgePoints[i] = vertices[outline[i]];
             }
             edgeCollider.points = edgePoints;
@@ -153,10 +257,10 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     void AssignVertices(Node[] points) {
-        for (int i = 0; i < points.Length; i ++) {
-            if (points[i].vertexIndex == -1) {
-                points[i].vertexIndex = vertices.Count;
-                vertices.Add(points[i].position);
+        foreach (Node point in points) {
+            if (point.vertexIndex == -1) {
+                point.vertexIndex = vertices.Count;
+                vertices.Add(point.position);
             }
         }
     }
@@ -183,8 +287,7 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     void CalculateMeshOutlines() {
-
-        for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex ++) {
+        for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++) {
             if (!checkedVertices.Contains(vertexIndex)) {
                 int newOutlineVertex = GetConnectedOutlineVertex(vertexIndex);
                 if (newOutlineVertex != -1) {
@@ -201,9 +304,9 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     void FollowOutline(int vertexIndex, int outlineIndex) {
-        outlines [outlineIndex].Add (vertexIndex);
-        checkedVertices.Add (vertexIndex);
-        int nextVertexIndex = GetConnectedOutlineVertex (vertexIndex);
+        outlines [outlineIndex].Add(vertexIndex);
+        checkedVertices.Add(vertexIndex);
+        int nextVertexIndex = GetConnectedOutlineVertex(vertexIndex);
 
         if (nextVertexIndex != -1) {
             FollowOutline(nextVertexIndex, outlineIndex);
@@ -213,9 +316,7 @@ public class MeshGenerator : MonoBehaviour {
     int GetConnectedOutlineVertex(int vertexIndex) {
         List<Triangle> trianglesContainingVertex = triangleDictionary [vertexIndex];
 
-        for (int i = 0; i < trianglesContainingVertex.Count; i ++) {
-            Triangle triangle = trianglesContainingVertex[i];
-
+        foreach (Triangle triangle in trianglesContainingVertex) {
             for (int j = 0; j < 3; j ++) {
                 int vertexB = triangle[j];
                 if (vertexB != vertexIndex && !checkedVertices.Contains(vertexB)) {
@@ -233,8 +334,8 @@ public class MeshGenerator : MonoBehaviour {
         List<Triangle> trianglesContainingVertexA = triangleDictionary [vertexA];
         int sharedTriangleCount = 0;
 
-        for (int i = 0; i < trianglesContainingVertexA.Count; i ++) {
-            if (trianglesContainingVertexA[i].Contains(vertexB)) {
+        foreach (Triangle triangle in trianglesContainingVertexA) {
+            if (triangle.Contains(vertexB)) {
                 sharedTriangleCount ++;
                 if (sharedTriangleCount > 1) {
                     break;
@@ -267,45 +368,104 @@ public class MeshGenerator : MonoBehaviour {
             }
         }
 
-
         public bool Contains(int vertexIndex) {
             return vertexIndex == vertexIndexA || vertexIndex == vertexIndexB || vertexIndex == vertexIndexC;
         }
     }
 
     public class SquareGrid {
+        ControlNode[,] controlNodes;
         public Square[,] squares;
+        public float squareSize;
+        float mapWidth;
+        float mapHeight;
 
-        public SquareGrid(int[,] map, float squareSize) {
+        public SquareGrid(int[,] map, float _squareSize) {
+            squareSize = _squareSize;
             int nodeCountX = map.GetLength(0);
             int nodeCountY = map.GetLength(1);
-            float mapWidth = nodeCountX * squareSize;
-            float mapHeight = nodeCountY * squareSize;
+            mapWidth = nodeCountX * squareSize;
+            mapHeight = nodeCountY * squareSize;
 
-            ControlNode[,] controlNodes = new ControlNode[nodeCountX,nodeCountY];
+            controlNodes = new ControlNode[nodeCountX, nodeCountY];
 
-            for (int x = 0; x < nodeCountX; x ++) {
-                for (int y = 0; y < nodeCountY; y ++) {
-                    Vector2 pos = new Vector2(-mapWidth/2 + x * squareSize + squareSize/2, -mapHeight/2 + y * squareSize + squareSize/2);
-                    controlNodes[x,y] = new ControlNode(pos,map[x,y] == 1, squareSize);
+            for (int x = 0; x < nodeCountX; x++) {
+                for (int y = 0; y < nodeCountY; y++) {
+                    // Vector2 pos = new Vector2(-mapWidth/2 + x * squareSize + squareSize/2, -mapHeight/2 + y * squareSize + squareSize/2);
+                    Vector2 pos = new Vector2(-mapWidth/2 + x * squareSize, -mapHeight/2 + y * squareSize);
+                    controlNodes[x,y] = new ControlNode(pos, map[x,y] == 1, squareSize);
                 }
             }
 
-            squares = new Square[nodeCountX -1,nodeCountY -1];
-            for (int x = 0; x < nodeCountX-1; x ++) {
-                for (int y = 0; y < nodeCountY-1; y ++) {
+            squares = new Square[nodeCountX - 1,nodeCountY - 1];
+            for (int x = 0; x < nodeCountX - 1; x++) {
+                for (int y = 0; y < nodeCountY - 1; y++) {
                     squares[x,y] = new Square(controlNodes[x,y+1], controlNodes[x+1,y+1], controlNodes[x+1,y], controlNodes[x,y]);
                 }
             }
+        }
 
+        public Square this[int x, int y] {
+            get {
+                return squares[x, y];
+            }
+        }
+
+        public string ToString() {
+            string str = "";
+            for (int x = 0; x < squares.GetLength(0); x++) {
+                for (int y = 0; y < squares.GetLength(1); y++) {
+                    str += squares[x, y].configuration + " ";
+                }
+                str += "\n";
+            }
+
+            return str;
+        }
+
+        public IEnumerable<Square> GetSquaresInRadius(Vector2 center, float radius) {
+            int r = (int)(radius / squareSize) + 1;
+            int x = (int)((center.x + mapWidth / 2) / squareSize);
+            int y = (int)((center.y + mapHeight / 2) / squareSize);
+
+            yield return squares[x, y];
+
+            for (int dx = -r; dx <= r; dx++) {
+                int ddy = (int) Math.Sqrt(r * r - dx * dx);
+                for (int dy = -ddy; dy <= ddy; dy++) {
+                    yield return squares[x + dx, y + dy];
+                    yield return squares[x - dx, y - dy];
+                }
+            }
+        }
+
+        public void ResetIndices() {
+            for (int x = 0; x < squares.GetLength(0); x++) {
+                for (int y = 0; y < squares.GetLength(1); y++) {
+                    foreach (Node node in squares[x,y].GetAllNodes()) {
+                        node.vertexIndex = -1;
+                    }
+
+                    squares[x,y].CalculateConfiguration();
+                }
+            }
+        }
+
+        public Square LocateSquare(Vector2 position) {
+            int x = (int)((position.x + mapWidth / 2) / squareSize);
+            int y = (int)((position.y + mapHeight / 2) / squareSize);
+
+            Debug.Log($"{x}, {y}");
+
+            return squares[x, y];
         }
     }
 
     public class Square {
-
         public ControlNode topLeft, topRight, bottomRight, bottomLeft;
         public Node centreTop, centreRight, centreBottom, centreLeft;
         public int configuration;
+        public bool highlighted = false;
 
         public Square (ControlNode _topLeft, ControlNode _topRight, ControlNode _bottomRight, ControlNode _bottomLeft) {
             topLeft = _topLeft;
@@ -318,6 +478,11 @@ public class MeshGenerator : MonoBehaviour {
             centreBottom = bottomLeft.right;
             centreLeft = bottomLeft.above;
 
+            CalculateConfiguration();
+        }
+
+        public void CalculateConfiguration() {
+            configuration = 0;
             if (topLeft.active)
                 configuration += 8;
             if (topRight.active)
@@ -328,6 +493,48 @@ public class MeshGenerator : MonoBehaviour {
                 configuration += 1;
         }
 
+        public IEnumerable<ControlNode> GetNodes() {
+            yield return topLeft;
+            yield return topRight;
+            yield return bottomRight;
+            yield return bottomLeft;
+        }
+
+        public IEnumerable<Node> GetAllNodes() {
+            yield return topLeft;
+            yield return topRight;
+            yield return bottomRight;
+            yield return bottomLeft;
+
+            yield return centreTop;
+            yield return centreRight;
+            yield return centreBottom;
+            yield return centreLeft;
+        }
+
+        public Vector2 Center() {
+            return Vector2.Lerp(topLeft.position, bottomRight.position, 0.5f);
+        }
+
+        public bool ImpactSquare(BulletHandler.OnBulletExplosionArgs args) {
+            bool wasChanged = false;
+            foreach (ControlNode node in GetNodes().Where(n => n.active)) {
+                float distance = Vector2.Distance(node.position, args.position);
+                if (distance <= args.radius) {
+                    // float dmg = args.power * 1.5f - (distance / args.radius * args.power);
+                    float dmg = args.power - (distance / args.radius * args.power);
+                    // Debug.Log($"{distance} - {dmg}");
+
+                    if (node.durability < dmg) {
+                        // Debug.Log("DEACTIVATED!");
+                        node.active = false;
+                        wasChanged = true;
+                    }
+                }
+            }
+
+            return wasChanged;
+        }
     }
 
     public class Node {
@@ -340,9 +547,15 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     public class ControlNode : Node {
-
         public bool active;
         public Node above, right;
+
+        public float durability = 250f;
+
+        public static Color black = new Color(0, 0, 0, 0.5f);
+        public static Color white = new Color(1, 1, 1, 0.5f);
+        public static Color gray = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        public static Color red = new Color(1, 0, 0, 1);
 
         public ControlNode(Vector2 _pos, bool _active, float squareSize) : base(_pos) {
             active = _active;
@@ -350,5 +563,12 @@ public class MeshGenerator : MonoBehaviour {
             right = new Node(position + Vector2.right * squareSize/2f);
         }
 
+        public Color GetColor() {
+            if (active) {
+                return gray;
+            } else {
+                return white;
+            }
+        }
     }
 }

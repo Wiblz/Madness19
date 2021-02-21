@@ -17,7 +17,8 @@ public class MapGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start() {
         map = new int[width, height];
-        seed = System.DateTime.Now.ToString().GetHashCode();
+        // seed = System.DateTime.Now.ToString().GetHashCode();
+        seed = 734285800;
         generator = new System.Random(seed);
 
         Generate();
@@ -35,7 +36,7 @@ public class MapGenerator : MonoBehaviour
                 int a = generator.Next(100);
 
                 if (x == 0 || x == width-1 || y == 0 || y == height -1) {
-                    map[x,y] = 1;
+                    map[x, y] = 1;
                 } else {
                     map[x, y] = a < density ? 1 : 0;
                 }
@@ -74,16 +75,4 @@ public class MapGenerator : MonoBehaviour
 
         return count;
     }
-
-    // void OnDrawGizmos() {
-    //     if (map != null) {
-    //         for (int x = 0; x < width; x++) {
-    //             for (int y = 0; y < height; y++) {
-    //                 Gizmos.color = (map[x, y] == 1) ? Color.black : Color.white;
-    //                 Vector2 pos = new Vector2(-width / 2 + x + .5f, -height / 2 + y + .5f);
-    //                 Gizmos.DrawCube(pos, Vector2.one);
-    //             }
-    //         }
-    //     }
-    // }
 }
