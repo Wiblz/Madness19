@@ -12,11 +12,14 @@ public class MeshGenerator : MonoBehaviour {
     public MeshFilter cave;
 
     List<Vector3> vertices;
-    List<int> triangles;
 
-    Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>> ();
+    static Dictionary<int, Triangle> _triangles = new Dictionary<int, Triangle>();
+    static Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
     List<List<int>> outlines = new List<List<int>> ();
     HashSet<int> checkedVertices = new HashSet<int>();
+
+    static HashSet<int> freeVertexIndices = new HashSet<int>();
+    static HashSet<int> freeTriangleIndices = new HashSet<int>();
 
     Vector2 impactPosition;
     float impactRadius;
@@ -34,36 +37,10 @@ public class MeshGenerator : MonoBehaviour {
 
             for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
                 for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
-
-                    // Gizmos.color = squareGrid[x,y].topLeft.GetColor();
-                    // Gizmos.DrawWireCube(squareGrid[x,y].topLeft.position, Vector3.one);
-
-                    // Gizmos.color = squareGrid[x,y].topRight.GetColor();
-                    // Gizmos.DrawWireCube(squareGrid[x,y].topRight.position, Vector3.one);
-
-                    // Gizmos.color = squareGrid[x,y].bottomRight.GetColor();
-                    // Gizmos.DrawWireCube(squareGrid[x,y].bottomRight.position, Vector3.one);
-
-                    // Gizmos.color = squareGrid[x,y].bottomLeft.GetColor();
-                    // Gizmos.DrawWireCube(squareGrid[x,y].bottomLeft.position, Vector3.one);
-
-                    // Gizmos.color = squareGrid[x,y].configuration == 0?ControlNode.white:ControlNode.gray;
-                    Gizmos.color = squareGrid[x,y].highlighted ? Color.white : Color.clear;
+                    Gizmos.color = squareGrid[x,y].highlighted ? Color.blue : Color.clear;
 
                     Gizmos.DrawLine(squareGrid[x,y].topLeft.position, squareGrid[x,y].topRight.position);
-                    // Gizmos.DrawLine(squareGrid[x,y].topRight.position, squareGrid[x,y].bottomRight.position);
-                    // Gizmos.DrawLine(squareGrid[x,y].bottomRight.position, squareGrid[x,y].bottomLeft.position);
                     Gizmos.DrawLine(squareGrid[x,y].bottomLeft.position, squareGrid[x,y].topLeft.position);
-
-                    // Gizmos.color = squareGrid[x,y].configuration == 0?ControlNode.white:ControlNode.red;
-                    // Gizmos.DrawWireCube(squareGrid[x,y].Center(), Vector3.one);
-
-                    // Gizmos.color = gray;
-                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreTop.position, Vector3.one * .15f);
-                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreRight.position, Vector3.one * .15f);
-                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreBottom.position, Vector3.one * .15f);
-                    // Gizmos.DrawCube(squareGrid.squares[x,y].centreLeft.position, Vector3.one * .15f);
-
                 }
             }
         }
@@ -79,46 +56,185 @@ public class MeshGenerator : MonoBehaviour {
         }
     }
 
+    // private void RecalculateTheWholeFuckingMap(object sender, BulletHandler.OnBulletExplosionArgs args) {
+    //     var watch = System.Diagnostics.Stopwatch.StartNew();
+    //     impactPosition = args.position;
+    //     impactRadius = args.radius;
+
+    //     foreach (Square square in squareGrid.GetSquaresInRadius(args.position, args.radius)) {
+    //         square.ImpactSquare(args);
+    //         square.highlighted = true;
+    //     }
+
+    //     squareGrid.ResetIndices();
+    //     triangleDictionary.Clear();
+    //     outlines.Clear();
+    //     checkedVertices.Clear();
+
+    //     vertices = new List<Vector3>();
+    //     triangles = new List<int>();
+
+    //     Debug.Log(squareGrid.ToString());
+    //     for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
+    //         for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
+    //             List<Triangle> newTriangles = TriangulateSquare(squareGrid[x, y]);
+    //             foreach (Triangle t in newTriangles) {
+    //                 AssignTriangle(t);
+    //             }
+    //         }
+    //     }
+
+    //     Mesh mesh = cave.mesh;
+    //     mesh.Clear();
+        
+    //     mesh.vertices = vertices.ToArray();
+    //     mesh.triangles = triangles.ToArray();
+    //     mesh.RecalculateNormals();
+        
+    //     Generate2DColliders();
+
+    //     watch.Stop();
+    //     Debug.Log(watch.ElapsedMilliseconds);
+    // }
+
+    private int[] convertTriangles() {
+        int[] tt = new int[3 * _triangles.Count];
+        for (int l = 0; l < _triangles.Count; l++) {
+            try{
+                tt[l * 3] = _triangles[l][0].vertexIndex;
+                tt[l * 3 + 1] = _triangles[l][1].vertexIndex;
+                tt[l * 3 + 2] = _triangles[l][2].vertexIndex;
+            } catch(IndexOutOfRangeException e) {
+                Debug.Log(".");
+            }
+        }
+
+        return tt;
+    }
+
     private void A(object sender, BulletHandler.OnBulletExplosionArgs args) {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
         impactPosition = args.position;
         impactRadius = args.radius;
 
+        List<Square> impactedSquares = new List<Square>();
+
         foreach (Square square in squareGrid.GetSquaresInRadius(args.position, args.radius)) {
             bool wasChanged = square.ImpactSquare(args);
-            // if (wasChanged) {
-            //     square.CalculateConfiguration();
-            // }
-            square.highlighted = true;
+            if (wasChanged) {
+                impactedSquares.Add(square);
+                square.highlighted = true;
+            }
         }
 
-        squareGrid.ResetIndices();
-        triangleDictionary.Clear();
-        outlines.Clear();
-        checkedVertices.Clear();
+        Debug.Log(impactedSquares.Count);
 
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
-
-        Debug.Log(squareGrid.ToString());
-        for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
-            for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
-                TriangulateSquare(squareGrid[x, y]);
+        foreach (Square square in impactedSquares) {
+            foreach (var node in square.toRemove.Where(v => v.active)) {
+                node.active = false;
+                square.verticesRemoved.Add(node);
+                
             }
+            int old = square.configuration;
+            square.CalculateConfiguration();
+            // Debug.Log($"from {old} to {square.configuration}");
+            square.Check();
+        }
+
+        foreach (Square square in impactedSquares) {
+            foreach (Node v in square.verticesAdded) {
+                if (v.vertexIndex == -1) {
+                    if (freeVertexIndices.Count == 0) break;
+                    v.vertexIndex = freeVertexIndices.First();
+                    vertices[v.vertexIndex] = v.position;
+                    freeVertexIndices.Remove(v.vertexIndex);
+                }
+            }
+
+            var newTriangles = TriangulateSquare(square);
+            int i = 0;
+            for (; i < newTriangles.Count; i++) {
+                if (freeTriangleIndices.Count == 0) break;
+                int triangleID = freeTriangleIndices.First();
+                freeTriangleIndices.Remove(triangleID);
+
+                AssignTriangle(newTriangles[i], triangleID);
+            }
+
+            for (; i < newTriangles.Count; i++) {
+                AssignTriangle(newTriangles[i]);
+            }
+        }
+
+        List<int> _freeVertexIndices = new List<int>(freeVertexIndices);
+        List<int> _freeTriangleIndices = new List<int>(freeTriangleIndices);
+        _freeVertexIndices.Sort();
+        _freeTriangleIndices.Sort();
+
+        _freeVertexIndices.Add(vertices.Count);
+        for (int j = 0; j < _freeVertexIndices.Count - 1; j++) {
+            for (int k = _freeVertexIndices[j] + 1; k < _freeVertexIndices[j + 1]; k++) {
+                foreach (Triangle triangle in triangleDictionary[k]) {
+                    triangle.Replace(k, k - j - 1);
+                }
+                triangleDictionary[k - j - 1] = triangleDictionary[k];
+                triangleDictionary[k] = new List<Triangle>();
+            }
+        }
+
+        for (int i = _freeVertexIndices.Count - 2; i >= 0; i--) {
+            vertices.RemoveAt(_freeVertexIndices[i]);
+        }
+
+        _freeTriangleIndices.Add(_triangles.Count);
+        for (int j = 0; j < _freeTriangleIndices.Count - 1; j++) {
+            for (int k = _freeTriangleIndices[j] + 1; k < _freeTriangleIndices[j + 1]; k++) {
+                var t = _triangles[k];
+                t.id = (k - j - 1);
+                _triangles[k - j - 1] = t;
+            }
+        }
+
+        int c = _triangles.Count;
+        for (int i = c - 1; i > c - _freeTriangleIndices.Count; i--) {
+            _triangles.Remove(i);
         }
 
         Mesh mesh = cave.mesh;
         mesh.Clear();
         
         mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        mesh.triangles = convertTriangles();
         mesh.RecalculateNormals();
         
+        outlines.Clear();
+        checkedVertices.Clear();
+        for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
+            for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
+                if (squareGrid[x, y].configuration == 15) {
+                    checkedVertices.Add(squareGrid[x, y].topLeft.vertexIndex);
+                    checkedVertices.Add(squareGrid[x, y].topRight.vertexIndex);
+                    checkedVertices.Add(squareGrid[x, y].bottomRight.vertexIndex);
+                    checkedVertices.Add(squareGrid[x, y].bottomLeft.vertexIndex);
+                }
+            }
+        }
+
+        foreach(KeyValuePair<int, List<Triangle>> entry in triangleDictionary) {
+            entry.Value.RemoveAll(t => t.Contains(-1));
+        }
+
         Generate2DColliders();
+
+        watch.Stop();
+        Debug.Log(watch.ElapsedMilliseconds);
     }
 
     public void GenerateMesh(int[,] map, float squareSize) {
         bulletHandler = GameObject.Find("BulletHandler").GetComponentInParent<BulletHandler>();
         bulletHandler.OnBulletExplosion += A;
+        // bulletHandler.OnBulletExplosion += RecalculateTheWholeFuckingMap;
 
         triangleDictionary.Clear();
         outlines.Clear();
@@ -127,12 +243,14 @@ public class MeshGenerator : MonoBehaviour {
         squareGrid = new SquareGrid(map, squareSize);
 
         vertices = new List<Vector3>();
-        triangles = new List<int>();
 
-        Debug.Log(squareGrid.ToString());
+        // Debug.Log(squareGrid.ToString());
         for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
             for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
-                TriangulateSquare(squareGrid[x, y]);
+                List<Triangle> newTriangles = TriangulateSquare(squareGrid[x, y]);
+                foreach (Triangle t in newTriangles) {
+                    AssignTriangle(t);
+                }
             }
         }
 
@@ -140,31 +258,20 @@ public class MeshGenerator : MonoBehaviour {
         cave.mesh = mesh;
 
         mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        mesh.triangles = convertTriangles();
         mesh.RecalculateNormals();
-
-        // int tileAmount = 10;
-        // Vector2[] uvs = new Vector2[vertices.Count];
-        // for (int i = 0; i < vertices.Count; i++) {
-        //     float percentX = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize,map.GetLength(0)/2*squareSize,vertices[i].x) * tileAmount;
-        //     float percentY = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize,map.GetLength(0)/2*squareSize,vertices[i].z) * tileAmount;
-        //     uvs[i] = new Vector2(percentX,percentY);
-        // }
-        // mesh.uv = uvs;
-
 
         Generate2DColliders();
     }
 
     void Generate2DColliders() {
-        EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D> ();
+        EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D>();
         foreach (EdgeCollider2D collider in currentColliders) {
             Destroy(collider);
         }
 
         CalculateMeshOutlines();
 
-        Debug.Log(outlines.Count);
         foreach (List<int> outline in outlines) {
             EdgeCollider2D edgeCollider = gameObject.AddComponent<EdgeCollider2D>();
             Vector2[] edgePoints = new Vector2[outline.Count];
@@ -177,83 +284,71 @@ public class MeshGenerator : MonoBehaviour {
 
     }
 
-    void TriangulateSquare(Square square) {
+    List<Triangle> TriangulateSquare(Square square) {
         switch (square.configuration) {
         case 0:
-            break;
+            return new List<Triangle>();
 
         // 1 points:
         case 1:
-            MeshFromPoints(square.centreLeft, square.centreBottom, square.bottomLeft);
-            break;
+            return MeshFromPoints(square.centreLeft, square.centreBottom, square.bottomLeft);
         case 2:
-            MeshFromPoints(square.bottomRight, square.centreBottom, square.centreRight);
-            break;
+            return MeshFromPoints(square.bottomRight, square.centreBottom, square.centreRight);
         case 4:
-            MeshFromPoints(square.topRight, square.centreRight, square.centreTop);
-            break;
+            return MeshFromPoints(square.topRight, square.centreRight, square.centreTop);
         case 8:
-            MeshFromPoints(square.topLeft, square.centreTop, square.centreLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.centreTop, square.centreLeft);
 
         // 2 points:
         case 3:
-            MeshFromPoints(square.centreRight, square.bottomRight, square.bottomLeft, square.centreLeft);
-            break;
+            return MeshFromPoints(square.centreRight, square.bottomRight, square.bottomLeft, square.centreLeft);
         case 6:
-            MeshFromPoints(square.centreTop, square.topRight, square.bottomRight, square.centreBottom);
-            break;
+            return MeshFromPoints(square.centreTop, square.topRight, square.bottomRight, square.centreBottom);
         case 9:
-            MeshFromPoints(square.topLeft, square.centreTop, square.centreBottom, square.bottomLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.centreTop, square.centreBottom, square.bottomLeft);
         case 12:
-            MeshFromPoints(square.topLeft, square.topRight, square.centreRight, square.centreLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.topRight, square.centreRight, square.centreLeft);
         case 5:
-            MeshFromPoints(square.centreTop, square.topRight, square.centreRight, square.centreBottom, square.bottomLeft, square.centreLeft);
-            break;
+            return MeshFromPoints(square.centreTop, square.topRight, square.centreRight, square.centreBottom, square.bottomLeft, square.centreLeft);
         case 10:
-            MeshFromPoints(square.topLeft, square.centreTop, square.centreRight, square.bottomRight, square.centreBottom, square.centreLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.centreTop, square.centreRight, square.bottomRight, square.centreBottom, square.centreLeft);
 
         // 3 point:
         case 7:
-            MeshFromPoints(square.centreTop, square.topRight, square.bottomRight, square.bottomLeft, square.centreLeft);
-            break;
+            return MeshFromPoints(square.centreTop, square.topRight, square.bottomRight, square.bottomLeft, square.centreLeft);
         case 11:
-            MeshFromPoints(square.topLeft, square.centreTop, square.centreRight, square.bottomRight, square.bottomLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.centreTop, square.centreRight, square.bottomRight, square.bottomLeft);
         case 13:
-            MeshFromPoints(square.topLeft, square.topRight, square.centreRight, square.centreBottom, square.bottomLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.topRight, square.centreRight, square.centreBottom, square.bottomLeft);
         case 14:
-            MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, square.centreBottom, square.centreLeft);
-            break;
+            return MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, square.centreBottom, square.centreLeft);
 
         // 4 point:
         case 15:
-            MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
             checkedVertices.Add(square.topLeft.vertexIndex);
             checkedVertices.Add(square.topRight.vertexIndex);
             checkedVertices.Add(square.bottomRight.vertexIndex);
             checkedVertices.Add(square.bottomLeft.vertexIndex);
-            break;
+            return MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
         }
 
+        return null;
     }
 
-    void MeshFromPoints(params Node[] points) {
+    List<Triangle> MeshFromPoints(params Node[] points) {
         AssignVertices(points);
+        var triangles = new List<Triangle>();
 
         if (points.Length >= 3)
-            CreateTriangle(points[0], points[1], points[2]);
+            triangles.Add(new Triangle(points[0], points[1], points[2]));
         if (points.Length >= 4)
-            CreateTriangle(points[0], points[2], points[3]);
-        if (points.Length >= 5) 
-            CreateTriangle(points[0], points[3], points[4]);
+            triangles.Add(new Triangle(points[0], points[2], points[3]));
+        if (points.Length >= 5)
+            triangles.Add(new Triangle(points[0], points[3], points[4]));
         if (points.Length >= 6)
-            CreateTriangle(points[0], points[4], points[5]);
+            triangles.Add(new Triangle(points[0], points[4], points[5]));
 
+        return triangles;
     }
 
     void AssignVertices(Node[] points) {
@@ -265,15 +360,22 @@ public class MeshGenerator : MonoBehaviour {
         }
     }
 
-    void CreateTriangle(Node a, Node b, Node c) {
-        triangles.Add(a.vertexIndex);
-        triangles.Add(b.vertexIndex);
-        triangles.Add(c.vertexIndex);
+    void AssignTriangle(Triangle triangle) {
+        triangle.id = _triangles.Count;
+        _triangles[triangle.id] = triangle;
 
-        Triangle triangle = new Triangle (a.vertexIndex, b.vertexIndex, c.vertexIndex);
-        AddTriangleToDictionary (triangle.vertexIndexA, triangle);
-        AddTriangleToDictionary (triangle.vertexIndexB, triangle);
-        AddTriangleToDictionary (triangle.vertexIndexC, triangle);
+        for (int i = 0; i < 3; i++) {
+            AddTriangleToDictionary(triangle[i].vertexIndex, triangle);
+        }
+    }
+
+    void AssignTriangle(Triangle triangle, int id) {
+        triangle.id = id;
+        _triangles[triangle.id] = triangle;
+
+        for (int i = 0; i < 3; i++) {
+            AddTriangleToDictionary(triangle[i].vertexIndex, triangle);
+        }
     }
 
     void AddTriangleToDictionary(int vertexIndexKey, Triangle triangle) {
@@ -292,7 +394,7 @@ public class MeshGenerator : MonoBehaviour {
                 int newOutlineVertex = GetConnectedOutlineVertex(vertexIndex);
                 if (newOutlineVertex != -1) {
                     checkedVertices.Add(vertexIndex);
-
+                    
                     List<int> newOutline = new List<int>();
                     newOutline.Add(vertexIndex);
                     outlines.Add(newOutline);
@@ -304,7 +406,7 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     void FollowOutline(int vertexIndex, int outlineIndex) {
-        outlines [outlineIndex].Add(vertexIndex);
+        outlines[outlineIndex].Add(vertexIndex);
         checkedVertices.Add(vertexIndex);
         int nextVertexIndex = GetConnectedOutlineVertex(vertexIndex);
 
@@ -318,7 +420,7 @@ public class MeshGenerator : MonoBehaviour {
 
         foreach (Triangle triangle in trianglesContainingVertex) {
             for (int j = 0; j < 3; j ++) {
-                int vertexB = triangle[j];
+                int vertexB = triangle[j].vertexIndex;
                 if (vertexB != vertexIndex && !checkedVertices.Contains(vertexB)) {
                     if (IsOutlineEdge(vertexIndex, vertexB)) {
                         return vertexB;
@@ -331,45 +433,53 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     bool IsOutlineEdge(int vertexA, int vertexB) {
-        List<Triangle> trianglesContainingVertexA = triangleDictionary [vertexA];
+        List<Triangle> trianglesContainingVertexA = triangleDictionary[vertexA];
         int sharedTriangleCount = 0;
 
         foreach (Triangle triangle in trianglesContainingVertexA) {
             if (triangle.Contains(vertexB)) {
-                sharedTriangleCount ++;
+                sharedTriangleCount++;
                 if (sharedTriangleCount > 1) {
                     break;
                 }
             }
         }
+
         return sharedTriangleCount == 1;
     }
 
-    struct Triangle {
-        public int vertexIndexA;
-        public int vertexIndexB;
-        public int vertexIndexC;
-        int[] vertices;
+    class Triangle {
+        public int id;
+        Node[] vertices;
 
-        public Triangle (int a, int b, int c) {
-            vertexIndexA = a;
-            vertexIndexB = b;
-            vertexIndexC = c;
+        public Triangle (Node a, Node b, Node c) {
+            id = -1;
 
-            vertices = new int[3];
+            vertices = new Node[3];
             vertices[0] = a;
             vertices[1] = b;
             vertices[2] = c;
         }
 
-        public int this[int i] {
+        public Node this[int i] {
             get {
                 return vertices[i];
             }
         }
 
+        public override string ToString() {
+            return $"#{id} ({vertices[0].vertexIndex} {vertices[1].vertexIndex} {vertices[2].vertexIndex})";
+        }
+
         public bool Contains(int vertexIndex) {
-            return vertexIndex == vertexIndexA || vertexIndex == vertexIndexB || vertexIndex == vertexIndexC;
+            return vertices.Any(v => v.vertexIndex == vertexIndex);
+        }
+
+        public void Replace(int from, int to) {
+            int nodeIndex = Array.FindIndex(vertices, v => v.vertexIndex == from);
+            if (nodeIndex != -1) {
+                vertices[nodeIndex].vertexIndex = to;
+            }
         }
     }
 
@@ -423,10 +533,10 @@ public class MeshGenerator : MonoBehaviour {
             return str;
         }
 
-        public IEnumerable<Square> GetSquaresInRadius(Vector2 center, float radius) {
+        public IEnumerable<Square> GetSquaresInRadius(Vector2 centre, float radius) {
             int r = (int)(radius / squareSize) + 1;
-            int x = (int)((center.x + mapWidth / 2) / squareSize);
-            int y = (int)((center.y + mapHeight / 2) / squareSize);
+            int x = (int)((centre.x + mapWidth / 2) / squareSize);
+            int y = (int)((centre.y + mapHeight / 2) / squareSize);
 
             yield return squares[x, y];
 
@@ -466,6 +576,15 @@ public class MeshGenerator : MonoBehaviour {
         public Node centreTop, centreRight, centreBottom, centreLeft;
         public int configuration;
         public bool highlighted = false;
+
+        static HashSet<int> centreLeftConfigs = new HashSet<int>( new int[] { 1, 3, 5, 7, 8, 10, 12, 14 } );
+        static HashSet<int> centreRightConfigs = new HashSet<int>( new int[] { 2, 3, 4, 5, 10, 11, 12, 13 } );
+        static HashSet<int> centreTopConfigs = new HashSet<int>( new int[] { 4, 5, 6, 7, 8, 9, 10, 11 } );
+        static HashSet<int> centreBottomConfigs = new HashSet<int>( new int[] { 1, 2, 5, 6, 9, 10, 13, 14 } );
+
+        public List<Node> verticesAdded = new List<Node>();
+        public List<Node> verticesRemoved = new List<Node>();
+        public HashSet<ControlNode> toRemove = new HashSet<ControlNode>();
 
         public Square (ControlNode _topLeft, ControlNode _topRight, ControlNode _bottomRight, ControlNode _bottomLeft) {
             topLeft = _topLeft;
@@ -512,22 +631,72 @@ public class MeshGenerator : MonoBehaviour {
             yield return centreLeft;
         }
 
-        public Vector2 Center() {
+        public void Check() {
+            if (centreLeftConfigs.Contains(configuration)) {
+                if (centreLeft.vertexIndex == -1) {
+                    verticesAdded.Add(centreLeft);
+                }
+            } else {
+                if (centreLeft.vertexIndex != -1) {
+                    verticesRemoved.Add(centreLeft);
+                }
+            }
+
+            if (centreRightConfigs.Contains(configuration)) {
+                if (centreRight.vertexIndex == -1) {
+                    verticesAdded.Add(centreRight);
+                }
+            } else {
+                if (centreRight.vertexIndex != -1) {
+                    verticesRemoved.Add(centreRight);
+                }
+            }
+
+            if (centreTopConfigs.Contains(configuration)) {
+                if (centreTop.vertexIndex == -1) {
+                    verticesAdded.Add(centreTop);
+                }
+            } else {
+                if (centreTop.vertexIndex != -1) {
+                    verticesRemoved.Add(centreTop);
+                }
+            }
+
+            if (centreBottomConfigs.Contains(configuration)) {
+                if (centreBottom.vertexIndex == -1) {
+                    verticesAdded.Add(centreBottom);
+                }
+            } else {
+                if (centreBottom.vertexIndex != -1) {
+                    verticesRemoved.Add(centreBottom);
+                }
+            }
+
+            foreach (Node point in verticesRemoved.Where(v => v.vertexIndex != -1)) {
+                freeVertexIndices.Add(point.vertexIndex);
+                foreach (Triangle t in triangleDictionary[point.vertexIndex]) {
+                    freeTriangleIndices.Add(t.id);
+                }
+
+                triangleDictionary[point.vertexIndex].Clear();
+                point.vertexIndex = -1;
+            }
+        }
+
+        public Vector2 centre() {
             return Vector2.Lerp(topLeft.position, bottomRight.position, 0.5f);
         }
 
         public bool ImpactSquare(BulletHandler.OnBulletExplosionArgs args) {
             bool wasChanged = false;
-            foreach (ControlNode node in GetNodes().Where(n => n.active)) {
+            foreach (ControlNode node in GetNodes().Where(n => n.active && !toRemove.Contains(n))) {
                 float distance = Vector2.Distance(node.position, args.position);
                 if (distance <= args.radius) {
-                    // float dmg = args.power * 1.5f - (distance / args.radius * args.power);
                     float dmg = args.power - (distance / args.radius * args.power);
                     // Debug.Log($"{distance} - {dmg}");
 
                     if (node.durability < dmg) {
-                        // Debug.Log("DEACTIVATED!");
-                        node.active = false;
+                        toRemove.Add(node);
                         wasChanged = true;
                     }
                 }
@@ -544,6 +713,10 @@ public class MeshGenerator : MonoBehaviour {
         public Node(Vector2 _pos) {
             position = _pos;
         }
+
+        public override string ToString() {
+            return $"#{vertexIndex} {position}";
+        }  
     }
 
     public class ControlNode : Node {
