@@ -21,8 +21,8 @@ public class Shaker : MonoBehaviour {
         Debug.Log("Hello");
         CinemachineBasicMultiChannelPerlin cinemachineBasicMultiChannelPerlin = cinemachineVirtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
 
-        cinemachineBasicMultiChannelPerlin.m_AmplitudeGain = 1f;
-        shakeTime = 1.5f;
+        cinemachineBasicMultiChannelPerlin.m_AmplitudeGain = 5f;
+        shakeTime = 3.5f;
     }
 
     void Update() {

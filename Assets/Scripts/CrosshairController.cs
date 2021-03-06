@@ -43,10 +43,15 @@ public class CrosshairController : MonoBehaviour {
         }
 
         if (Input.GetButtonDown("Fire1")) {
-            // bulletHandler.Spawn(weapon, firePoint.position, aimingDirection);
+            bulletHandler.Spawn(weapon, firePoint.position, aimingDirection);
             // DEBUGGING
-            // bulletHandler.Explode(new Vector2(-1.2f, 2.3f), 1.5f, 1000f);
-            bulletHandler.Explode(new Vector2(-1.8f, 1.7f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-1.6f, 1.9f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-3.0f, 2.3f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-1.2f, 3.3f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-3.0f, 0.3f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-4.0f, 1.5f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-2.5f, 1.5f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(-4.0f, -2.5f), 1.5f, 1000f);
             // GameObject blt = Instantiate(bullet, firePoint.position, Quaternion.identity);
             // Physics2D.IgnoreCollision(blt.GetComponent<CircleCollider2D>(), player.GetComponent<Collider2D>());
             // blt.GetComponent<Rigidbody2D>().AddForce(aimingDirection * weapon.power, ForceMode2D.Impulse);

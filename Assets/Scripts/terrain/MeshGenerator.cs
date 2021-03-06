@@ -56,47 +56,6 @@ public class MeshGenerator : MonoBehaviour {
         }
     }
 
-    // private void RecalculateTheWholeFuckingMap(object sender, BulletHandler.OnBulletExplosionArgs args) {
-    //     var watch = System.Diagnostics.Stopwatch.StartNew();
-    //     impactPosition = args.position;
-    //     impactRadius = args.radius;
-
-    //     foreach (Square square in squareGrid.GetSquaresInRadius(args.position, args.radius)) {
-    //         square.ImpactSquare(args);
-    //         square.highlighted = true;
-    //     }
-
-    //     squareGrid.ResetIndices();
-    //     triangleDictionary.Clear();
-    //     outlines.Clear();
-    //     checkedVertices.Clear();
-
-    //     vertices = new List<Vector3>();
-    //     triangles = new List<int>();
-
-    //     Debug.Log(squareGrid.ToString());
-    //     for (int x = 0; x < squareGrid.squares.GetLength(0); x++) {
-    //         for (int y = 0; y < squareGrid.squares.GetLength(1); y++) {
-    //             List<Triangle> newTriangles = TriangulateSquare(squareGrid[x, y]);
-    //             foreach (Triangle t in newTriangles) {
-    //                 AssignTriangle(t);
-    //             }
-    //         }
-    //     }
-
-    //     Mesh mesh = cave.mesh;
-    //     mesh.Clear();
-        
-    //     mesh.vertices = vertices.ToArray();
-    //     mesh.triangles = triangles.ToArray();
-    //     mesh.RecalculateNormals();
-        
-    //     Generate2DColliders();
-
-    //     watch.Stop();
-    //     Debug.Log(watch.ElapsedMilliseconds);
-    // }
-
     private int[] convertTriangles() {
         int[] tt = new int[3 * _triangles.Count];
         for (int l = 0; l < _triangles.Count; l++) {
@@ -117,6 +76,9 @@ public class MeshGenerator : MonoBehaviour {
 
         impactPosition = args.position;
         impactRadius = args.radius;
+
+        freeVertexIndices.Clear();
+        freeTriangleIndices.Clear();
 
         List<Square> impactedSquares = new List<Square>();
 
@@ -151,6 +113,7 @@ public class MeshGenerator : MonoBehaviour {
                     freeVertexIndices.Remove(v.vertexIndex);
                 }
             }
+            square.verticesAdded.Clear();
 
             var newTriangles = TriangulateSquare(square);
             int i = 0;
@@ -234,7 +197,6 @@ public class MeshGenerator : MonoBehaviour {
     public void GenerateMesh(int[,] map, float squareSize) {
         bulletHandler = GameObject.Find("BulletHandler").GetComponentInParent<BulletHandler>();
         bulletHandler.OnBulletExplosion += A;
-        // bulletHandler.OnBulletExplosion += RecalculateTheWholeFuckingMap;
 
         triangleDictionary.Clear();
         outlines.Clear();
@@ -534,7 +496,7 @@ public class MeshGenerator : MonoBehaviour {
         }
 
         public IEnumerable<Square> GetSquaresInRadius(Vector2 centre, float radius) {
-            int r = (int)(radius / squareSize) + 1;
+            int r = (int)(radius / squareSize) + 2;
             int x = (int)((centre.x + mapWidth / 2) / squareSize);
             int y = (int)((centre.y + mapHeight / 2) / squareSize);
 
@@ -598,6 +560,15 @@ public class MeshGenerator : MonoBehaviour {
             centreLeft = bottomLeft.above;
 
             CalculateConfiguration();
+        }
+
+        public override string ToString() {
+            string str = "";
+            foreach(var node in GetNodes()) {
+                str += $"{node.vertexIndex} ";
+            }
+
+            return str;
         }
 
         public void CalculateConfiguration() {
@@ -681,6 +652,7 @@ public class MeshGenerator : MonoBehaviour {
                 triangleDictionary[point.vertexIndex].Clear();
                 point.vertexIndex = -1;
             }
+            verticesRemoved.Clear();
         }
 
         public Vector2 centre() {

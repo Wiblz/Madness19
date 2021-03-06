@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cinemachine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +7,8 @@ using UnityEngine;
 public class BulletHandler : MonoBehaviour {
     public GameObject player;
     public GameObject bullet;
+
+    CinemachineImpulseSource ImpulseSource;
 
     public event EventHandler<OnBulletExplosionArgs> OnBulletExplosion;
 
@@ -17,7 +20,10 @@ public class BulletHandler : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
+        ImpulseSource = GetComponent<CinemachineImpulseSource>();
         player = GameObject.Find("PlayerObject");
+
+        OnBulletExplosion += ShakeCamera;
     }
 
     // Update is called once per frame
@@ -33,5 +39,10 @@ public class BulletHandler : MonoBehaviour {
 
     public void Explode(Vector2 position, float radius, float power) {
         OnBulletExplosion?.Invoke(this, new OnBulletExplosionArgs{ position = position, radius = radius, power = power });
+    }
+
+    public void ShakeCamera(object sender, BulletHandler.OnBulletExplosionArgs args) {
+        Debug.Log("Wazzup");
+        ImpulseSource.GenerateImpulseAt(args.position, new Vector3(1.0f, 1.0f, 0f));
     }
 }
