@@ -42,7 +42,6 @@ public class BulletHandler : MonoBehaviour {
     }
 
     public void ShakeCamera(object sender, BulletHandler.OnBulletExplosionArgs args) {
-        Debug.Log("Wazzup");
         ImpulseSource.GenerateImpulseAt(args.position, new Vector3(1.0f, 1.0f, 0f));
     }
 }

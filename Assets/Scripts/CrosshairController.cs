@@ -45,7 +45,7 @@ public class CrosshairController : MonoBehaviour {
         if (Input.GetButtonDown("Fire1")) {
             bulletHandler.Spawn(weapon, firePoint.position, aimingDirection);
             // DEBUGGING
-            // bulletHandler.Explode(new Vector2(-1.6f, 1.9f), 1.5f, 1000f);
+            // bulletHandler.Explode(new Vector2(38.2f, 13.5f), 1.5f, 1000f);
             // bulletHandler.Explode(new Vector2(-3.0f, 2.3f), 1.5f, 1000f);
             // bulletHandler.Explode(new Vector2(-1.2f, 3.3f), 1.5f, 1000f);
             // bulletHandler.Explode(new Vector2(-3.0f, 0.3f), 1.5f, 1000f);

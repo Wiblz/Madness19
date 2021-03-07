@@ -98,9 +98,6 @@ public class MeshGenerator : MonoBehaviour {
                 square.verticesRemoved.Add(node);
                 
             }
-            int old = square.configuration;
-            square.CalculateConfiguration();
-            // Debug.Log($"from {old} to {square.configuration}");
             square.Check();
         }
 
@@ -115,7 +112,8 @@ public class MeshGenerator : MonoBehaviour {
             }
             square.verticesAdded.Clear();
 
-            var newTriangles = TriangulateSquare(square);
+            // var newTriangles = TriangulateSquare(square);
+            var newTriangles = TriangulateSquare(square, square.oldConfiguration);
             int i = 0;
             for (; i < newTriangles.Count; i++) {
                 if (freeTriangleIndices.Count == 0) break;
@@ -244,6 +242,30 @@ public class MeshGenerator : MonoBehaviour {
             edgeCollider.points = edgePoints;
         }
 
+    }
+
+    List<Triangle> TriangulateSquare(Square square, int oldConfiguration) {
+        List<Triangle> triangles = TriangulateSquare(square);
+
+        if (oldConfiguration == 7  && square.configuration == 5) {
+            triangles.RemoveAt(3);
+        } else if (oldConfiguration == 11  && square.configuration == 10) {
+            triangles.RemoveAt(0);
+            triangles.RemoveAt(1);
+        } else if (oldConfiguration == 13  && square.configuration == 9) {
+            triangles.RemoveAt(1);
+        } else if (oldConfiguration == 13  && square.configuration == 12) {
+            triangles.RemoveAt(0);
+        } else if (oldConfiguration == 14  && square.configuration == 10) {
+            triangles.RemoveAt(3);
+            triangles.RemoveAt(2);
+        } else if (oldConfiguration == 15  && square.configuration == 11) {
+            triangles.RemoveAt(2);
+        } else if (square.configuration == 14) {
+            triangles.RemoveAt(0);
+        }
+
+        return triangles;
     }
 
     List<Triangle> TriangulateSquare(Square square) {
@@ -537,6 +559,7 @@ public class MeshGenerator : MonoBehaviour {
         public ControlNode topLeft, topRight, bottomRight, bottomLeft;
         public Node centreTop, centreRight, centreBottom, centreLeft;
         public int configuration;
+        public int oldConfiguration;
         public bool highlighted = false;
 
         static HashSet<int> centreLeftConfigs = new HashSet<int>( new int[] { 1, 3, 5, 7, 8, 10, 12, 14 } );
@@ -572,6 +595,7 @@ public class MeshGenerator : MonoBehaviour {
         }
 
         public void CalculateConfiguration() {
+            oldConfiguration = configuration;
             configuration = 0;
             if (topLeft.active)
                 configuration += 8;
@@ -603,6 +627,8 @@ public class MeshGenerator : MonoBehaviour {
         }
 
         public void Check() {
+            CalculateConfiguration();
+
             if (centreLeftConfigs.Contains(configuration)) {
                 if (centreLeft.vertexIndex == -1) {
                     verticesAdded.Add(centreLeft);

@@ -54,6 +54,7 @@ public class MovementController : MonoBehaviour {
         animator = GetComponent<Animator>();
 
         currentWeapon = weapons[0];
+        transform.position = new Vector3(35.5f, 8.1f, 0.0f);
     }
 
     // Update is called once per frame
@@ -86,6 +87,11 @@ public class MovementController : MonoBehaviour {
             ChangeWeapon(0);
         } else if (Input.GetKeyDown("2")) {
             ChangeWeapon(1);
+        }
+
+        // DEBUGGING
+        if (Input.GetKeyDown("p")) {
+            Debug.Log($"{transform.position}");
         }
 
         UpdateState();
