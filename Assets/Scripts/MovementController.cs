@@ -156,9 +156,9 @@ public class MovementController : MonoBehaviour {
                 ls.x *= -1f;
                 transform.localScale = ls;
             }
-        }
 
-        rb2D.velocity = new Vector2(movement.x * speed, rb2D.velocity.y);
+        }
+            rb2D.velocity = new Vector2(movement.x * speed, rb2D.velocity.y);
     }
 
     // Resets multijump and dash 

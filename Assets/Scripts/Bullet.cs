@@ -20,6 +20,6 @@ public class Bullet : MonoBehaviour {
     void OnCollisionEnter2D(Collision2D other) {
         Debug.Log(other.GetContact(0).point);
         Destroy(gameObject);
-        bulletHandler.Explode(other.GetContact(0).point, 1.5f, 1000f);
+        bulletHandler.Explode(other.GetContact(0).point, 1.5f, 1000f, 50f);
     }
 }

@@ -247,7 +247,9 @@ public class MeshGenerator : MonoBehaviour {
     List<Triangle> TriangulateSquare(Square square, int oldConfiguration) {
         List<Triangle> triangles = TriangulateSquare(square);
 
-        if (oldConfiguration == 7  && square.configuration == 5) {
+        if (oldConfiguration == 5  && square.configuration == 4) {
+            triangles.RemoveAt(0);
+        } else if (oldConfiguration == 7  && square.configuration == 5) {
             triangles.RemoveAt(3);
         } else if (oldConfiguration == 11  && square.configuration == 10) {
             triangles.RemoveAt(0);
