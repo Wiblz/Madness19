@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CrosshairController : MonoBehaviour {
-    // Start is called before the first frame update
     public GameObject player;
     public BulletHandler bulletHandler;
     Weapon weapon;
@@ -27,7 +26,6 @@ public class CrosshairController : MonoBehaviour {
         weapon = args.newWeapon;
     }
 
-    // Update is called once per frame
     void Update() {
         position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         firePointPosition = new Vector2(firePoint.position.x, firePoint.position.y);
@@ -45,8 +43,8 @@ public class CrosshairController : MonoBehaviour {
         if (Input.GetButtonDown("Fire1")) {
             bulletHandler.Spawn(weapon, firePoint.position, aimingDirection);
             // DEBUGGING
-            // bulletHandler.Explode(new Vector2(37.5f, 9.0f), 1.5f, 1000f, 50f);
-            // bulletHandler.Explode(new Vector2(37.2f, 7.5f), 1.5f, 1000f, 50f);
+            // bulletHandler.Explode(new Vector2(-0.8f, 6.5f), 1.5f, 1000f, 50f);
+            // bulletHandler.Explode(new Vector2(-1.3f, 7.2f), 1.5f, 1000f, 50f);
             // bulletHandler.Explode(new Vector2(38.2f, 13.5f), 1.5f, 1000f);
             // bulletHandler.Explode(new Vector2(-3.0f, 2.3f), 1.5f, 1000f);
             // bulletHandler.Explode(new Vector2(-1.2f, 3.3f), 1.5f, 1000f);

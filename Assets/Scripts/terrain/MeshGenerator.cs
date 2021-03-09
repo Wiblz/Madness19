@@ -13,7 +13,7 @@ public class MeshGenerator : MonoBehaviour {
 
     List<Vector3> vertices;
 
-    static Dictionary<int, Triangle> _triangles = new Dictionary<int, Triangle>();
+    static Dictionary<int, Triangle> triangles = new Dictionary<int, Triangle>();
     static Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
     List<List<int>> outlines = new List<List<int>> ();
     HashSet<int> checkedVertices = new HashSet<int>();
@@ -57,15 +57,11 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     private int[] convertTriangles() {
-        int[] tt = new int[3 * _triangles.Count];
-        for (int l = 0; l < _triangles.Count; l++) {
-            try{
-                tt[l * 3] = _triangles[l][0].vertexIndex;
-                tt[l * 3 + 1] = _triangles[l][1].vertexIndex;
-                tt[l * 3 + 2] = _triangles[l][2].vertexIndex;
-            } catch(IndexOutOfRangeException e) {
-                Debug.Log(".");
-            }
+        int[] tt = new int[3 * triangles.Count];
+        for (int l = 0; l < triangles.Count; l++) {
+            tt[l * 3] = triangles[l][0].vertexIndex;
+            tt[l * 3 + 1] = triangles[l][1].vertexIndex;
+            tt[l * 3 + 2] = triangles[l][2].vertexIndex;
         }
 
         return tt;
@@ -90,7 +86,7 @@ public class MeshGenerator : MonoBehaviour {
             }
         }
 
-        Debug.Log(impactedSquares.Count);
+        // Debug.Log(impactedSquares.Count);
 
         foreach (Square square in impactedSquares) {
             foreach (var node in square.toRemove.Where(v => v.active)) {
@@ -148,18 +144,18 @@ public class MeshGenerator : MonoBehaviour {
             vertices.RemoveAt(_freeVertexIndices[i]);
         }
 
-        _freeTriangleIndices.Add(_triangles.Count);
+        _freeTriangleIndices.Add(triangles.Count);
         for (int j = 0; j < _freeTriangleIndices.Count - 1; j++) {
             for (int k = _freeTriangleIndices[j] + 1; k < _freeTriangleIndices[j + 1]; k++) {
-                var t = _triangles[k];
+                var t = triangles[k];
                 t.id = (k - j - 1);
-                _triangles[k - j - 1] = t;
+                triangles[k - j - 1] = t;
             }
         }
 
-        int c = _triangles.Count;
+        int c = triangles.Count;
         for (int i = c - 1; i > c - _freeTriangleIndices.Count; i--) {
-            _triangles.Remove(i);
+            triangles.Remove(i);
         }
 
         Mesh mesh = cave.mesh;
@@ -189,7 +185,7 @@ public class MeshGenerator : MonoBehaviour {
         Generate2DColliders();
 
         watch.Stop();
-        Debug.Log(watch.ElapsedMilliseconds);
+        Debug.Log($"{watch.ElapsedMilliseconds} milliseconds.");
     }
 
     public void GenerateMesh(int[,] map, float squareSize) {
@@ -347,8 +343,8 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     void AssignTriangle(Triangle triangle) {
-        triangle.id = _triangles.Count;
-        _triangles[triangle.id] = triangle;
+        triangle.id = triangles.Count;
+        triangles[triangle.id] = triangle;
 
         for (int i = 0; i < 3; i++) {
             AddTriangleToDictionary(triangle[i].vertexIndex, triangle);
@@ -357,7 +353,7 @@ public class MeshGenerator : MonoBehaviour {
 
     void AssignTriangle(Triangle triangle, int id) {
         triangle.id = id;
-        _triangles[triangle.id] = triangle;
+        triangles[triangle.id] = triangle;
 
         for (int i = 0; i < 3; i++) {
             AddTriangleToDictionary(triangle[i].vertexIndex, triangle);
@@ -551,7 +547,7 @@ public class MeshGenerator : MonoBehaviour {
             int x = (int)((position.x + mapWidth / 2) / squareSize);
             int y = (int)((position.y + mapHeight / 2) / squareSize);
 
-            Debug.Log($"{x}, {y}");
+            // Debug.Log($"{x}, {y}");
 
             return squares[x, y];
         }
@@ -572,6 +568,8 @@ public class MeshGenerator : MonoBehaviour {
         public List<Node> verticesAdded = new List<Node>();
         public List<Node> verticesRemoved = new List<Node>();
         public HashSet<ControlNode> toRemove = new HashSet<ControlNode>();
+
+        static System.Random generator = new System.Random();
 
         public Square (ControlNode _topLeft, ControlNode _topRight, ControlNode _bottomRight, ControlNode _bottomLeft) {
             topLeft = _topLeft;
@@ -692,8 +690,10 @@ public class MeshGenerator : MonoBehaviour {
             foreach (ControlNode node in GetNodes().Where(n => n.active && !toRemove.Contains(n))) {
                 float distance = Vector2.Distance(node.position, args.position);
                 if (distance <= args.radius) {
-                    float dmg = args.power - (distance / args.radius * args.power);
-                    // Debug.Log($"{distance} - {dmg}");
+                    // float dmgMultiplier = generator.Next(75, 125) / 100f;
+                    float dmgMultiplier = 1.0f;
+                    float dmg = (args.power - (distance / args.radius * args.power)) * dmgMultiplier;
+                    // Debug.Log($"{dmgMultiplier} -- {dmg}");
 
                     if (node.durability < dmg) {
                         toRemove.Add(node);

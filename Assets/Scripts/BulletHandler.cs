@@ -9,6 +9,7 @@ public class BulletHandler : MonoBehaviour {
     public GameObject bullet;
 
     CinemachineImpulseSource ImpulseSource;
+    ParticleSystem ps;
 
     public event EventHandler<OnBulletExplosionArgs> OnBulletExplosion;
 
@@ -22,9 +23,11 @@ public class BulletHandler : MonoBehaviour {
     // Start is called before the first frame update
     void Start() {
         ImpulseSource = GetComponent<CinemachineImpulseSource>();
+        ps = GetComponent<ParticleSystem>();
         player = GameObject.Find("PlayerObject");
 
         OnBulletExplosion += ShakeCamera;
+        OnBulletExplosion += EmitParticles;
         // OnBulletExplosion += ApplyKnockback;
     }
 
@@ -65,5 +68,12 @@ public class BulletHandler : MonoBehaviour {
                 // rb.velocity = dir * args.knockback;
             }
         }
+    }
+
+    public void EmitParticles(object sender, BulletHandler.OnBulletExplosionArgs args) {
+        ParticleSystem.EmitParams emitParams = new ParticleSystem.EmitParams();
+        emitParams.position = args.position;
+        emitParams.applyShapeToPosition = true;
+        ps.Emit(emitParams, 60);
     }
 }

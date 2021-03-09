@@ -7,6 +7,8 @@ public class MovementController : MonoBehaviour {
     public float speed = 3.0f;
     public float jumpForce = 5.0f;
 
+    public AnimationController animationController;
+
     [SerializeField]
     public Weapon[] weapons;
     public Weapon currentWeapon;
@@ -19,13 +21,10 @@ public class MovementController : MonoBehaviour {
     Vector2 movement = new Vector2();
     Rigidbody2D rb2D;
     Collider2D boxCollider;
-    Animator animator;
-    string animationState = "AnimationState";
 
     public LayerMask solidSurface;
     public Transform crosshair;
 
-    public bool facingRight = true;
     bool isControllable = true;
     
     [Header("Jumping")]
@@ -33,6 +32,9 @@ public class MovementController : MonoBehaviour {
     public int maxJumps = 2; 
     float jumpDelay = 0f;
     int jumpsAvailable = 0;
+
+    public bool isFalling = false;
+    float fallStart;
 
     [Header("Dashing")]
     public bool isDashing = false;
@@ -42,22 +44,15 @@ public class MovementController : MonoBehaviour {
     bool dashAvailable = false;
     IEnumerator dashCoroutine;
 
-    enum CharStates {
-        walk = 1,
-        idle = 2
-    }
-
-    // Start is called before the first frame update
     void Start() {
+        animationController = GetComponent<AnimationController>();
         rb2D = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
-        animator = GetComponent<Animator>();
 
         currentWeapon = weapons[0];
-        transform.position = new Vector3(35.5f, 8.1f, 0.0f);
+        // transform.position = new Vector3(35.5f, 8.1f, 0.0f);
     }
 
-    // Update is called once per frame
     void Update() {
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.Normalize();
@@ -65,6 +60,22 @@ public class MovementController : MonoBehaviour {
         isGrounded = GroundCheck();
         if (Time.time > jumpDelay && isGrounded) {
             Ground();
+        }
+
+        if (isGrounded) {
+            if (isFalling) {
+                isFalling = false;
+                // Check damage
+                float delta = fallStart - transform.position.y;
+                Debug.Log($"Fall distance: {delta}");
+            }
+        } else {
+            if (!isFalling && rb2D.velocity.y < 0) {
+                isFalling = true;
+                fallStart = transform.position.y;
+            } else if (isFalling && rb2D.velocity.y >= 0) {
+                isFalling = false;
+            }
         }
 
         if (isControllable) {
@@ -91,7 +102,7 @@ public class MovementController : MonoBehaviour {
 
         // DEBUGGING
         if (Input.GetKeyDown("p")) {
-            Debug.Log($"{transform.position}");
+            Debug.Log($"Current position: {transform.position}");
         }
 
         UpdateState();
@@ -124,6 +135,8 @@ public class MovementController : MonoBehaviour {
     }
 
     private IEnumerator Dash() {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
         isDashing = true;
         dashAvailable = false;
         isControllable = false;
@@ -143,22 +156,19 @@ public class MovementController : MonoBehaviour {
         isDashing = false;
         isControllable = true;
         rb2D.gravityScale = 17.5f;
-        // Debug.Log("Setting v to 0");
         rb2D.velocity = Vector2.zero;
+
+        watch.Stop();
+        Debug.Log($"Dash lasted for {watch.ElapsedMilliseconds} milliseconds.");
     }
 
     private void MoveCharacter() {
         if (movement.x != 0) {
-            if (facingRight != movement.x > 0) {
-                facingRight = !facingRight;
-
-                Vector3 ls = transform.localScale;
-                ls.x *= -1f;
-                transform.localScale = ls;
+            if (animationController.facingRight != movement.x > 0) {
+                animationController.Flip();
             }
-
         }
-            rb2D.velocity = new Vector2(movement.x * speed, rb2D.velocity.y);
+        rb2D.velocity = new Vector2(movement.x * speed, rb2D.velocity.y);
     }
 
     // Resets multijump and dash 
@@ -169,9 +179,9 @@ public class MovementController : MonoBehaviour {
 
     private void UpdateState() {
         if (movement.x != 0) {
-            animator.SetInteger(animationState, (int)CharStates.walk);
+            animationController.Walk();
         } else {
-            animator.SetInteger(animationState, (int)CharStates.idle);
+            animationController.Idle();
         }
     }
 
