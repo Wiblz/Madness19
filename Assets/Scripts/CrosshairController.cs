@@ -4,19 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CrosshairController : MonoBehaviour {
-    public GameObject player;
     public BulletHandler bulletHandler;
     Weapon weapon;
 
-    public Transform firePoint;
+    Transform firePoint;
     Vector2 firePointPosition;
     
     Vector2 position = new Vector2();
 
-    void Start() {
-        player = GameObject.Find("PlayerObject");
-        weapon = player.GetComponent<MovementController>().currentWeapon;
-        player.GetComponent<MovementController>().OnWeaponChanged += ChangeWeapon;
+    void Awake() {
+        weapon = GetComponentInParent<MovementController>().currentWeapon;
+        firePoint = transform.parent.GetChild(0);
+        GetComponentInParent<MovementController>().OnWeaponChanged += ChangeWeapon;
         bulletHandler = GameObject.Find("BulletHandler").GetComponentInParent<BulletHandler>();
 
         Cursor.visible = false;

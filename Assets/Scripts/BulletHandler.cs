@@ -20,18 +20,15 @@ public class BulletHandler : MonoBehaviour {
         public float knockback;
     }
 
-    // Start is called before the first frame update
     void Start() {
         ImpulseSource = GetComponent<CinemachineImpulseSource>();
         ps = GetComponent<ParticleSystem>();
-        player = GameObject.Find("PlayerObject");
 
         OnBulletExplosion += ShakeCamera;
         OnBulletExplosion += EmitParticles;
-        // OnBulletExplosion += ApplyKnockback;
+        OnBulletExplosion += ImpactCreatures;
     }
 
-    // Update is called once per frame
     void Update() {
         
     }
@@ -50,22 +47,37 @@ public class BulletHandler : MonoBehaviour {
         ImpulseSource.GenerateImpulseAt(args.position, new Vector3(1.0f, 1.0f, 0f));
     }
 
-    public void ApplyKnockback(object sender, BulletHandler.OnBulletExplosionArgs args) {
+    private void ApplyKnockback(Rigidbody2D rb, BulletHandler.OnBulletExplosionArgs args) {
+        // rb.AddExplosionForce(args.knockback, args.position, args.radius);
+
+        Debug.Log($"{new Vector2(rb.position.x, rb.position.y)} {args.position}");
+        Vector2 dir = (new Vector2(rb.position.x, rb.position.y) - args.position);
+        dir.Normalize();
+
+        Debug.Log(dir * args.knockback);
+        rb.AddForce(dir * args.knockback, ForceMode2D.Impulse);
+    }
+
+    private void DealDamage(GameController gc, Vector2 position, BulletHandler.OnBulletExplosionArgs args) {
+        float distance = Vector2.Distance(position, args.position);
+        float dmg = Mathf.Max(args.power - (distance / args.radius * args.power), 0);
+
+        gc.creature.HP -= dmg;
+    }
+
+    public void ImpactCreatures(object sender, BulletHandler.OnBulletExplosionArgs args) {
         Collider2D[] objects = Physics2D.OverlapCircleAll(args.position, args.radius);
-        // Debug.Log($"{objects.Length} objects.");
 
         foreach (Collider2D o in objects) {
+            Vector2 position = o.transform.position;
             Rigidbody2D rb = o.GetComponent<Rigidbody2D>();
             if (rb != null) {
-                // rb.AddExplosionForce(args.knockback, args.position, args.radius);
+                // ApplyKnockback(rb, args);
+            }
 
-                Debug.Log($"{new Vector2(o.transform.position.x, o.transform.position.y)} {args.position}");
-                Vector2 dir = (new Vector2(o.transform.position.x, o.transform.position.y) - args.position);
-                dir.Normalize();
-
-                Debug.Log(dir * args.knockback);
-                rb.AddForce(dir * args.knockback, ForceMode2D.Impulse);
-                // rb.velocity = dir * args.knockback;
+            GameController gc = o.GetComponent<GameController>();
+            if (rb != null) {
+                DealDamage(gc, position, args);
             }
         }
     }

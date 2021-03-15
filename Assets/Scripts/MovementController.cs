@@ -7,7 +7,7 @@ public class MovementController : MonoBehaviour {
     public float speed = 3.0f;
     public float jumpForce = 5.0f;
 
-    public AnimationController animationController;
+    private AnimationController animationController;
 
     [SerializeField]
     public Weapon[] weapons;
@@ -23,6 +23,7 @@ public class MovementController : MonoBehaviour {
     Collider2D boxCollider;
 
     public LayerMask solidSurface;
+    public GameObject crosshairPrefab;
     public Transform crosshair;
 
     bool isControllable = true;
@@ -48,9 +49,9 @@ public class MovementController : MonoBehaviour {
         animationController = GetComponent<AnimationController>();
         rb2D = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
+        crosshair = Instantiate(crosshairPrefab, Vector2.zero, Quaternion.identity, gameObject.transform).transform;
 
         currentWeapon = weapons[0];
-        // transform.position = new Vector3(35.5f, 8.1f, 0.0f);
     }
 
     void Update() {
@@ -62,21 +63,46 @@ public class MovementController : MonoBehaviour {
             Ground();
         }
 
-        if (isGrounded) {
-            if (isFalling) {
+        if (isFalling) {
+            float delta = fallStart - transform.position.y;
+
+            // just landed, deal damage
+            if (isGrounded) {
                 isFalling = false;
-                // Check damage
-                float delta = fallStart - transform.position.y;
-                Debug.Log($"Fall distance: {delta}");
+                //check damage
+                // Debug.Log($"Fall distance: {delta}");
+            } else {
+                if (delta > 40) {
+                    // deal void damage
+                }
+                // just double jumped/dashed, reset the fall
+                if (rb2D.velocity.y >= 0) {
+                    isFalling = false;
+                }
             }
         } else {
-            if (!isFalling && rb2D.velocity.y < 0) {
+            // start fall
+            if (rb2D.velocity.y < 0) {
                 isFalling = true;
                 fallStart = transform.position.y;
-            } else if (isFalling && rb2D.velocity.y >= 0) {
-                isFalling = false;
             }
         }
+
+        // if (isGrounded) {
+        //     if (isFalling) {
+        //         isFalling = false;
+        //         // Check damage
+        //         float delta = fallStart - transform.position.y;
+        //         Debug.Log($"Fall distance: {delta}");
+        //     }
+        // } else {
+        //     if (!isFalling && rb2D.velocity.y < 0) {
+        //         isFalling = true;
+        //         fallStart = transform.position.y;
+        //     } else if (isFalling && rb2D.velocity.y >= 0) {
+        //         isFalling = false;
+        //     }
+        // }
 
         if (isControllable) {
             if (Input.GetButtonDown("Jump")) {

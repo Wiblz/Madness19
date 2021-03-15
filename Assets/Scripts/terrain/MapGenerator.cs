@@ -3,22 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MapGenerator : MonoBehaviour
-{
+public class MapGenerator : MonoBehaviour {
+    public bool debug = false;
     public int height = 100;
     public int width = 100;
     int[,] map;
     System.Random generator;
-    public int seed;
+    int seed;
 
     [Range(0,100)]
     public int density = 50;
 
-    // Start is called before the first frame update
     void Start() {
         map = new int[width, height];
-        // seed = System.DateTime.Now.ToString().GetHashCode();
-        seed = 734285800;
+        if (debug) {
+            seed = 734285800;
+        } else {
+            seed = System.DateTime.Now.ToString().GetHashCode();
+        }
+
         generator = new System.Random(seed);
 
         Generate();
@@ -28,6 +31,7 @@ public class MapGenerator : MonoBehaviour
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
         meshGen.GenerateMesh(map, 1);
+        // meshGen.GenerateMesh(map, 0.5f);
     }
 
     void Generate() {

@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour {
-    bool ignore = true;
     BulletHandler bulletHandler;
 
-    // Start is called before the first frame update
     void Start() {
         bulletHandler = gameObject.GetComponentInParent<BulletHandler>();
         Destroy(gameObject, 5f);
     }
 
-    // Update is called once per frame
     void Update() {
         
     }
