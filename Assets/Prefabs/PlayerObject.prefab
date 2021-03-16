@@ -192,13 +192,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8441973697605287125}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 844f3be17772430d0861657e97463be9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 6
   jumpForce: 5
+  uiController: {fileID: 0}
   weapons:
   - {fileID: 11400000, guid: 5637e207db12864f2a63d848d5b7a35a, type: 2}
   - {fileID: 11400000, guid: 933500f4e43fa64939f6ee51b07ac4b2, type: 2}
@@ -215,6 +216,7 @@ MonoBehaviour:
   isDashing: 0
   dashForce: 10
   dashDuration: 0.1
+  dashAvailable: 0
 --- !u!114 &554719464
 MonoBehaviour:
   m_ObjectHideFlags: 0

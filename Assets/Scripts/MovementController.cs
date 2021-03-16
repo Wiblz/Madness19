@@ -8,6 +8,7 @@ public class MovementController : MonoBehaviour {
     public float jumpForce = 5.0f;
 
     private AnimationController animationController;
+    public UIController uiController;
 
     [SerializeField]
     public Weapon[] weapons;
@@ -42,16 +43,19 @@ public class MovementController : MonoBehaviour {
     public float dashForce = 10f;
     public float dashDuration = 0.1f;
     Vector2 dashingDirection;
-    bool dashAvailable = false;
+    public bool dashAvailable = false;
     IEnumerator dashCoroutine;
 
     void Start() {
         animationController = GetComponent<AnimationController>();
+        uiController = GameObject.Find("UI").GetComponent<UIController>();
+
         rb2D = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
         crosshair = Instantiate(crosshairPrefab, Vector2.zero, Quaternion.identity, gameObject.transform).transform;
 
         currentWeapon = weapons[0];
+        uiController.StartDashCooldown();
     }
 
     void Update() {
@@ -165,6 +169,7 @@ public class MovementController : MonoBehaviour {
 
         isDashing = true;
         dashAvailable = false;
+        uiController.StartDashCooldown();
         isControllable = false;
         rb2D.gravityScale = 0f;
         rb2D.velocity = Vector2.zero;
@@ -200,7 +205,7 @@ public class MovementController : MonoBehaviour {
     // Resets multijump and dash 
     private void Ground() {
         jumpsAvailable = maxJumps;
-        dashAvailable = true;
+        // dashAvailable = true;
     }
 
     private void UpdateState() {

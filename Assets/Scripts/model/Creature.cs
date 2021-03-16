@@ -7,10 +7,12 @@ public class Creature {
     public float speed;
     public float jumpForce;
 
+    public float dashCooldown = 2f;
+
     public Creature(float _maxHp) {
         maxHp = _maxHp;
         HP = maxHp;
-        regeneration = 20.5f;
+        regeneration = 25f;
         armor = 0f;
     }
 }
