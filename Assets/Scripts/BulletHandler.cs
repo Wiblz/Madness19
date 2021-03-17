@@ -58,11 +58,11 @@ public class BulletHandler : MonoBehaviour {
         rb.AddForce(dir * args.knockback, ForceMode2D.Impulse);
     }
 
-    private void DealDamage(GameController gc, Vector2 position, BulletHandler.OnBulletExplosionArgs args) {
+    private void DealDamage(PlayerModelController gc, Vector2 position, BulletHandler.OnBulletExplosionArgs args) {
         float distance = Vector2.Distance(position, args.position);
         float dmg = Mathf.Max(args.power - (distance / args.radius * args.power), 0);
 
-        gc.creature.HP -= dmg;
+        gc.Hit(dmg);
     }
 
     public void ImpactCreatures(object sender, BulletHandler.OnBulletExplosionArgs args) {
@@ -75,8 +75,8 @@ public class BulletHandler : MonoBehaviour {
                 // ApplyKnockback(rb, args);
             }
 
-            GameController gc = o.GetComponent<GameController>();
-            if (rb != null) {
+            PlayerModelController gc = o.GetComponent<PlayerModelController>();
+            if (gc != null) {
                 DealDamage(gc, position, args);
             }
         }

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MovementController : MonoBehaviour {    
+public class EnemyMovementController : MonoBehaviour {    
     public float speed = 3.0f;
     public float jumpForce = 5.0f;
 
@@ -91,22 +91,6 @@ public class MovementController : MonoBehaviour {
                 fallStart = transform.position.y;
             }
         }
-
-        // if (isGrounded) {
-        //     if (isFalling) {
-        //         isFalling = false;
-        //         // Check damage
-        //         float delta = fallStart - transform.position.y;
-        //         Debug.Log($"Fall distance: {delta}");
-        //     }
-        // } else {
-        //     if (!isFalling && rb2D.velocity.y < 0) {
-        //         isFalling = true;
-        //         fallStart = transform.position.y;
-        //     } else if (isFalling && rb2D.velocity.y >= 0) {
-        //         isFalling = false;
-        //     }
-        // }
 
         if (isControllable) {
             if (Input.GetButtonDown("Jump")) {

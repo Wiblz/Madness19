@@ -1,42 +1,43 @@
-﻿using System.Collections;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Rendering.PostProcessing;
 
 public class GameController : MonoBehaviour {
-    public Creature creature;
+    public PostProcessProfile profile;
+    public GameObject UIContainer;
+    Spawner spawner;
+    GameObject player;
+    PlayerModelController playerModelController;
 
-    UIController uiController;
-    MovementController movementController;
-
-    GameObject healthBar;
-    public Slider slider;
-    Text regen;
-    IEnumerator regenerationCoroutine;
+    ColorGrading colorGrading;
 
     void Start() {
-        creature = new Creature(1500);
-        
-        uiController = GameObject.Find("UI").GetComponent<UIController>();
-        uiController.creature = creature;
-        uiController.enabled = true;
+        spawner = gameObject.GetComponent<Spawner>();
+        colorGrading = profile.GetSetting<ColorGrading>();
+        colorGrading.saturation.value = 0f;
 
-        movementController = GetComponent<MovementController>();
-        uiController.movementController = movementController;
-        movementController.enabled = true;
+        player = spawner.SpawnPlayer();
+        playerModelController = player.GetComponent<PlayerModelController>();
+        playerModelController.OnPlayerDeath += HandlePlayerDeath;
+        UIContainer.SetActive(true);
+    }
 
-        regenerationCoroutine = Regenerate();
-        StartCoroutine(regenerationCoroutine);        
+    void HandlePlayerDeath(object sender, EventArgs args) {
+        StartCoroutine(FadeScreen());
+        UIContainer.SetActive(false);
+    }
+
+    IEnumerator FadeScreen() {
+        while (colorGrading.saturation.value > -100f) {
+            colorGrading.saturation.value -= 5f;
+
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 
     void Update() {
-
-    }
-
-    private IEnumerator Regenerate() {
-        while (true) {
-            creature.HP = Mathf.Min(creature.HP + creature.regeneration / 10f, creature.maxHp);
-            yield return new WaitForSeconds(0.1f);
-        }
+        
     }
 }

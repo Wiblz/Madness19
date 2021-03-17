@@ -9,6 +9,7 @@ public class UIController : MonoBehaviour {
     GameObject healthBar;
     public Slider slider;
     Text regen;
+    Text currentHealth;
     Image image;
 
     IEnumerator dashCooldownCoroutine;
@@ -18,12 +19,14 @@ public class UIController : MonoBehaviour {
         slider = healthBar.GetComponent<Slider>();
         slider.maxValue = creature.maxHp;
         regen = healthBar.transform.Find("Health Regen").GetComponent<Text>();
+        currentHealth = healthBar.transform.Find("Current Health").GetComponent<Text>();
         image = GameObject.Find("Cooldown Fill").GetComponent<Image>();
     }
 
     void Update() {
         slider.value = creature.HP;
         regen.text = $"+{creature.regeneration}";
+        currentHealth.text = $"{(int)creature.HP} / {creature.maxHp}";
     }
 
     public void StartDashCooldown() {
