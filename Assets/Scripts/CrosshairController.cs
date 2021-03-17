@@ -9,6 +9,8 @@ public class CrosshairController : MonoBehaviour {
 
     Transform firePoint;
     Vector2 firePointPosition;
+
+    bool a = false;
     
     Vector2 position = new Vector2();
 
@@ -42,15 +44,16 @@ public class CrosshairController : MonoBehaviour {
         if (Input.GetButtonDown("Fire1")) {
             bulletHandler.Spawn(weapon, firePoint.position, aimingDirection);
             // DEBUGGING
-            // bulletHandler.Explode(new Vector2(-0.8f, 6.5f), 1.5f, 1000f, 50f);
-            // bulletHandler.Explode(new Vector2(-1.3f, 7.2f), 1.5f, 1000f, 50f);
-            // bulletHandler.Explode(new Vector2(38.2f, 13.5f), 1.5f, 1000f);
-            // bulletHandler.Explode(new Vector2(-3.0f, 2.3f), 1.5f, 1000f);
-            // bulletHandler.Explode(new Vector2(-1.2f, 3.3f), 1.5f, 1000f);
-            // bulletHandler.Explode(new Vector2(-3.0f, 0.3f), 1.5f, 1000f);
-            // bulletHandler.Explode(new Vector2(-4.0f, 1.5f), 1.5f, 1000f);
-            // bulletHandler.Explode(new Vector2(-2.5f, 1.5f), 1.5f, 1000f);
-            // bulletHandler.Explode(new Vector2(-4.0f, -2.5f), 1.5f, 1000f);
+            // if (!a) {
+            //     bulletHandler.Explode(new Vector2(-2.0f, -21.5f), 1.5f, 1000f, 50f);
+            //     bulletHandler.Explode(new Vector2(-1.4f, -22.1f), 1.5f, 1000f, 50f);
+            //     bulletHandler.Explode(new Vector2(-1.1f, -21.4f), 1.5f, 1000f, 50f);
+            //     bulletHandler.Explode(new Vector2(-0.5f, -21.0f), 1.5f, 1000f, 50f);
+            //     a = true;
+            // } else {
+            //     bulletHandler.Explode(new Vector2(0.5f, -20.3f), 1.5f, 1000f, 50f);
+            // }
+
             // GameObject blt = Instantiate(bullet, firePoint.position, Quaternion.identity);
             // Physics2D.IgnoreCollision(blt.GetComponent<CircleCollider2D>(), player.GetComponent<Collider2D>());
             // blt.GetComponent<Rigidbody2D>().AddForce(aimingDirection * weapon.power, ForceMode2D.Impulse);

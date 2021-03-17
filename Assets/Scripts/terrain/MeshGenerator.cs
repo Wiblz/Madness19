@@ -247,8 +247,8 @@ public class MeshGenerator : MonoBehaviour {
         } else if (oldConfiguration == 7  && square.configuration == 5) {
             triangles.RemoveAt(3);
         } else if (oldConfiguration == 11  && square.configuration == 10) {
-            triangles.RemoveAt(0);
             triangles.RemoveAt(1);
+            triangles.RemoveAt(0);
         } else if (oldConfiguration == 13  && square.configuration == 9) {
             triangles.RemoveAt(1);
         } else if (oldConfiguration == 13  && square.configuration == 12) {

@@ -17,7 +17,7 @@ public class MapGenerator : MonoBehaviour {
     void Start() {
         map = new int[width, height];
         if (debug) {
-            seed = 734285800;
+            seed = 426921939;
         } else {
             seed = System.DateTime.Now.ToString().GetHashCode();
         }
@@ -31,6 +31,8 @@ public class MapGenerator : MonoBehaviour {
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
         meshGen.GenerateMesh(map, 1);
+
+        Debug.Log($"Map generated for seed {seed}");
         // meshGen.GenerateMesh(map, 0.5f);
     }
 

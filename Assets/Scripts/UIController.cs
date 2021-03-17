@@ -37,7 +37,6 @@ public class UIController : MonoBehaviour {
             StopCoroutine(dashCooldownCoroutine);
         }
 
-        Debug.Log(creature);
         dashCooldownCoroutine = DashCooldown(creature.dashCooldown);
         StartCoroutine(dashCooldownCoroutine);
     }
