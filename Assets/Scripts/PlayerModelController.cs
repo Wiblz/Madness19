@@ -38,6 +38,8 @@ public class PlayerModelController : MonoBehaviour {
             movementController.enabled = false;
             OnPlayerDeath?.Invoke(this, EventArgs.Empty);
         }
+
+        uiController.StartDamageEffect();
     }
 
     private IEnumerator Regenerate() {

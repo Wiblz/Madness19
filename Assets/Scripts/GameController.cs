@@ -27,6 +27,7 @@ public class GameController : MonoBehaviour {
     void HandlePlayerDeath(object sender, EventArgs args) {
         StartCoroutine(FadeScreen());
         UIContainer.SetActive(false);
+        player.transform.GetChild(1).gameObject.SetActive(false); // Change! Disabling Crosshair on death
     }
 
     IEnumerator FadeScreen() {
