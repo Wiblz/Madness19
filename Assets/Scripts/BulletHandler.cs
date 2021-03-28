@@ -33,8 +33,9 @@ public class BulletHandler : MonoBehaviour {
         
     }
 
-    public void Spawn(Weapon weapon, Vector3 position, Vector3 direction) {
+    public void SpawnProjectile(Weapon weapon, Vector3 position, Vector3 direction) {
         GameObject blt = Instantiate(bullet, position, Quaternion.identity, gameObject.transform);
+        blt.GetComponent<Bullet>().SetWeapon(weapon);
         Physics2D.IgnoreCollision(blt.GetComponent<CircleCollider2D>(), player.GetComponent<Collider2D>());
         blt.GetComponent<Rigidbody2D>().AddForce(direction * weapon.power, ForceMode2D.Impulse);
     }
@@ -45,6 +46,11 @@ public class BulletHandler : MonoBehaviour {
 
     public void ShakeCamera(object sender, BulletHandler.OnBulletExplosionArgs args) {
         ImpulseSource.GenerateImpulseAt(args.position, new Vector3(1.0f, 1.0f, 0f));
+    }
+
+    public void Teleport(Vector2 position, float damage) {
+        player.transform.position = position;
+        player.GetComponent<PlayerModelController>().Hit(damage);
     }
 
     private void ApplyKnockback(Rigidbody2D rb, BulletHandler.OnBulletExplosionArgs args) {
@@ -62,7 +68,7 @@ public class BulletHandler : MonoBehaviour {
         float distance = Vector2.Distance(position, args.position);
         float dmg = Mathf.Max(args.power - (distance / args.radius * args.power), 0);
 
-        gc.Hit(dmg);
+        if (dmg > 0) gc.Hit(dmg);
     }
 
     public void ImpactCreatures(object sender, BulletHandler.OnBulletExplosionArgs args) {

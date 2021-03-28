@@ -4,14 +4,14 @@ using Cinemachine;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour {
-    public GameObject playerPrefab;
+    // public GameObject playerPrefab;
+    public GameObject player;
     public GameObject boomerPrefab;
     public BulletHandler bulletHandler;
     public CinemachineVirtualCamera vcam;
     MeshGenerator.Map map;
 
     void Start() {
-        map = GameObject.Find("MapGenerator").GetComponent<MeshGenerator>().map;
     }
 
     void Update() {
@@ -21,9 +21,16 @@ public class Spawner : MonoBehaviour {
         }
     }
 
+    public void Init() {
+        map = GameObject.Find("MapGenerator").GetComponent<MeshGenerator>().map;
+    }
+
     public GameObject SpawnPlayer() {
         Vector2 spawnPoint = map.LocateEmptySpace(Vector2.zero);
-        GameObject player = Instantiate(playerPrefab, spawnPoint, Quaternion.identity);
+        // GameObject player = Instantiate(playerPrefab, spawnPoint, Quaternion.identity);
+        player.transform.position = spawnPoint;
+        player.SetActive(true);
+
         bulletHandler.player = player;
         vcam.Follow = player.transform;
 

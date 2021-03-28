@@ -44,8 +44,7 @@ GameObject:
   - component: {fileID: 8441973697605287144}
   - component: {fileID: 554719460}
   - component: {fileID: 554719464}
-  - component: {fileID: 3510673066511779317}
-  - component: {fileID: 6176391142190117385}
+  - component: {fileID: 8285172864971441424}
   m_Layer: 0
   m_Name: Boomer
   m_TagString: Player
@@ -106,7 +105,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 2068403137
-  m_SortingLayer: 1
+  m_SortingLayer: -1
   m_SortingOrder: 0
   m_Sprite: {fileID: 2976041059057689810, guid: c483493eb3ec0f143b5d78ad823ac661,
     type: 3}
@@ -177,10 +176,10 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 100
   m_LinearDrag: 0
   m_AngularDrag: 0
-  m_GravityScale: 17.5
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
@@ -193,51 +192,58 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5767591829334053518}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4b12dc53e8c285b499cbe909e198afb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   facingRight: 1
---- !u!114 &3510673066511779317
+--- !u!114 &8285172864971441424
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5767591829334053518}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68ee4d9d454a3cbc8b53fe6c6b6f88fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  slider: {fileID: 0}
---- !u!114 &6176391142190117385
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5767591829334053518}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dfed2e14cd0194c5094fdfec89ff0962, type: 3}
+  m_Script: {fileID: 11500000, guid: ddc44db5beb70b2898ec0fe28a590179, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
-  jumpForce: 5
-  uiController: {fileID: 0}
-  weapons: []
-  currentWeapon: {fileID: 0}
-  solidSurface:
+  visionRadius: 5
+  distanceChaseSpeedCurve:
     serializedVersion: 2
-    m_Bits: 0
-  crosshairPrefab: {fileID: 0}
-  crosshair: {fileID: 0}
-  isGrounded: 0
-  maxJumps: 2
-  isFalling: 0
-  isDashing: 0
-  dashForce: 10
-  dashDuration: 0.1
-  dashAvailable: 0
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: -0.021569252
+      outSlope: -0.021569252
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  target: {fileID: 0}
+  rb2D: {fileID: 0}

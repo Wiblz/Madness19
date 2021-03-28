@@ -503,7 +503,7 @@ public class MeshGenerator : MonoBehaviour {
             }
         }
 
-        public string ToString() {
+        public override string ToString() {
             string str = "";
             for (int x = 0; x < squares.GetLength(0); x++) {
                 for (int y = 0; y < squares.GetLength(1); y++) {

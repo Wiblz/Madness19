@@ -7,25 +7,19 @@ public class MovementController : MonoBehaviour {
     public float speed = 3.0f;
     public float jumpForce = 5.0f;
 
+    public bool debugMode = false;
+
     private AnimationController animationController;
     public UIController uiController;
-
-    [SerializeField]
-    public Weapon[] weapons;
-    public Weapon currentWeapon;
-    public event EventHandler<OnWeaponChangedArgs> OnWeaponChanged;
-
-    public class OnWeaponChangedArgs : EventArgs {
-        public Weapon newWeapon;
-    }
+    private PlayerModelController playerModelController;
 
     Vector2 movement = new Vector2();
     Rigidbody2D rb2D;
     Collider2D boxCollider;
 
     public LayerMask solidSurface;
-    public GameObject crosshairPrefab;
-    public Transform crosshair;
+    // public GameObject crosshairPrefab;
+    public GameObject crosshair;
 
     bool isControllable = true;
     
@@ -48,18 +42,25 @@ public class MovementController : MonoBehaviour {
 
     void Start() {
         animationController = GetComponent<AnimationController>();
-        uiController = GameObject.Find("UI").GetComponent<UIController>();
+        // uiController = GameObject.Find("UI").GetComponent<UIController>();
+        playerModelController = GetComponent<PlayerModelController>();
+        playerModelController.OnPlayerDeath += HandlePlayerDeath;
 
         rb2D = GetComponent<Rigidbody2D>();
-        boxCollider = GetComponent<BoxCollider2D>();
-        crosshair = Instantiate(crosshairPrefab, Vector2.zero, Quaternion.identity, gameObject.transform).transform;
+        if (debugMode) {
+            rb2D.gravityScale = 0;
+        }
 
-        currentWeapon = weapons[0];
-        uiController.StartDashCooldown();
+        boxCollider = GetComponent<BoxCollider2D>();
+        // crosshair = Instantiate(crosshairPrefab, Vector2.zero, Quaternion.identity, gameObject.transform);
     }
 
     void Update() {
         movement.x = Input.GetAxisRaw("Horizontal");
+
+        if (debugMode) {
+            movement.y = Input.GetAxisRaw("Vertical");
+        }
         movement.Normalize();
 
         isGrounded = GroundCheck();
@@ -89,24 +90,9 @@ public class MovementController : MonoBehaviour {
             if (rb2D.velocity.y < 0) {
                 isFalling = true;
                 fallStart = transform.position.y;
+                // Debug.Log($"Fall started at {transform.position}");
             }
         }
-
-        // if (isGrounded) {
-        //     if (isFalling) {
-        //         isFalling = false;
-        //         // Check damage
-        //         float delta = fallStart - transform.position.y;
-        //         Debug.Log($"Fall distance: {delta}");
-        //     }
-        // } else {
-        //     if (!isFalling && rb2D.velocity.y < 0) {
-        //         isFalling = true;
-        //         fallStart = transform.position.y;
-        //     } else if (isFalling && rb2D.velocity.y >= 0) {
-        //         isFalling = false;
-        //     }
-        // }
 
         if (isControllable) {
             if (Input.GetButtonDown("Jump")) {
@@ -122,12 +108,6 @@ public class MovementController : MonoBehaviour {
                 dashCoroutine = Dash();
                 StartCoroutine(dashCoroutine);
             }
-        }
-
-        if (Input.GetKeyDown("1")) {
-            ChangeWeapon(0);
-        } else if (Input.GetKeyDown("2")) {
-            ChangeWeapon(1);
         }
 
         // DEBUGGING
@@ -148,18 +128,16 @@ public class MovementController : MonoBehaviour {
         if (isDashing) {
             rb2D.AddForce(dashingDirection * dashForce, ForceMode2D.Impulse);
         } else {
-            MoveCharacter();
-        }
-    }
-
-    private void ChangeWeapon(int slot) {
-        if (currentWeapon != weapons[slot]) {
-            currentWeapon = weapons[slot];
-            OnWeaponChanged?.Invoke(this, new OnWeaponChangedArgs{ newWeapon = currentWeapon });   
+            if (debugMode) {
+                DebugMoveCharacter();
+            } else {
+                MoveCharacter();
+            }
         }
     }
 
     private void Jump() {
+        // Debug.Log($"Jump start {transform.position}");
         rb2D.velocity = new Vector2(rb2D.velocity.x, 0);
         rb2D.AddForce(Vector2.up * 30f, ForceMode2D.Impulse);
     }
@@ -175,9 +153,9 @@ public class MovementController : MonoBehaviour {
         rb2D.velocity = Vector2.zero;
         
         if (isGrounded) {
-            dashingDirection = crosshair.position.x - transform.position.x  > 0 ? Vector2.right : Vector2.left;
+            dashingDirection = crosshair.transform.position.x - transform.position.x  > 0 ? Vector2.right : Vector2.left;
         } else {
-            dashingDirection = crosshair.position - transform.position;
+            dashingDirection = crosshair.transform.position - transform.position;
         }
 
         dashingDirection.Normalize();
@@ -191,6 +169,15 @@ public class MovementController : MonoBehaviour {
 
         watch.Stop();
         Debug.Log($"Dash lasted for {watch.ElapsedMilliseconds} milliseconds.");
+    }
+
+    private void DebugMoveCharacter() {
+        if (movement.x != 0) {
+            if (animationController.facingRight != movement.x > 0) {
+                animationController.Flip();
+            }
+        }
+        rb2D.velocity = new Vector2(movement.x * speed, movement.y * speed);
     }
 
     private void MoveCharacter() {
@@ -215,12 +202,32 @@ public class MovementController : MonoBehaviour {
         }
     }
 
+    void OnDisable() {
+        crosshair.SetActive(false);
+    }
+
+    void OnEnable() {
+        if (crosshair) crosshair.SetActive(true);
+    }
+
+    void HandlePlayerDeath(object sender, EventArgs args) {
+        enabled = false;
+    }
+
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawLine(transform.position, transform.position + Vector3.down * 0.6f);
         if (boxCollider != null) {
             Gizmos.DrawLine(transform.position - Vector3.right * boxCollider.bounds.size.x / 2f, (transform.position - Vector3.right * boxCollider.bounds.size.x / 2f) + Vector3.down * 0.6f);
             Gizmos.DrawLine(transform.position + Vector3.right * boxCollider.bounds.size.x / 2f, (transform.position + Vector3.right * boxCollider.bounds.size.x / 2f) + Vector3.down * 0.6f);
-        }        
+        }
+
+        // Debug.Log($"{crosshair.transform.position} {transform.position}");
+        // if (crosshair) {
+        //     Vector3 crosshairDir = crosshair.transform.position - transform.position;
+        //     Gizmos.DrawLine(transform.position, transform.position + crosshairDir);
+        //     Gizmos.DrawLine(transform.position, transform.position + VectorByAngle(crosshairDir, 45 * Mathf.Deg2Rad));
+        //     Gizmos.DrawLine(transform.position, transform.position + VectorByAngle(crosshairDir, -45 * Mathf.Deg2Rad));
+        // }
     }
 }
